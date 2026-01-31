@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}GST Reports{% endblock %}
+
+{% block content %}
+<h1>GST Reports</h1>
+
+<div class="card">
+    <h2>Current Month Reports</h2>
+    <div class="flex" style="gap: 1rem; margin-top: 1rem;">
+        <a href="/gst/gstr1/{{ current_year }}/{{ current_month }}" class="btn">GSTR-1 (Sales)</a>
+        <a href="/gst/purchases/{{ current_year }}/{{ current_month }}" class="btn">Purchase GST</a>
+        <a href="/gst/gstr3b/{{ current_year }}/{{ current_month }}" class="btn">GSTR-3B Summary</a>
+        <a href="/gst/export/{{ current_year }}/{{ current_month }}" class="btn btn-success">Export to Excel</a>
+    </div>
+</div>
+{% endblock %}

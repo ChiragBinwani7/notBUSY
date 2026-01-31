@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice - {{ invoice.invoice_number }}{% endblock %}
+
+{% block content %}
+<div class="print-container">
+    <h1>TAX INVOICE</h1>
+
+    <div class="header-info">
+        <p><strong>Invoice No:</strong> {{ invoice.invoice_number }}</p>
+        <p><strong>Date:</strong> {{ invoice.invoice_date.strftime('%d-%m-%Y') }}</p>
+    </div>
+
+    <div class="party-info">
+        <h3>Bill To:</h3>
+        <p><strong>{{ invoice.customer_name }}</strong></p>
+        <p>{{ invoice.customer_state }}</p>
+        <p><strong>Transport:</strong> {{ invoice.transport_name }}</p>
+    </div>
+
+    <h3>Items:</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Variant</th>
+                <th>Parcels</th>
+                <th>Net Meters</th>
+                <th>Rate/M</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in line_items %}
+            <tr>
+                <td>{{ item.product_name }}</td>
+                <td>{{ item.finished_variant }}</td>
+                <td>{{ item.parcel_count }}</td>
+                <td>{{ "%.2f"|format(item.net_meters) }}</td>
+                <td>₹{{ "%.2f"|format(item.rate_per_meter) }}</td>
+                <td>₹{{ "%.2f"|format(item.item_value) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="invoice-totals">
+        <table class="totals-table">
+            <tr>
+                <td>Product Value:</td>
+                <td>₹{{ "%.2f"|format(invoice.product_value) }}</td>
+            </tr>
+            <tr>
+                <td>Freight ({{ invoice.total_parcels }} parcels × ₹100):</td>
+                <td>₹{{ "%.2f"|format(invoice.freight_charges) }}</td>
+            </tr>
+            {% if invoice.cgst_amount > 0 %}
+            <tr>
+                <td>CGST (2.5%):</td>
+                <td>₹{{ "%.2f"|format(invoice.cgst_amount) }}</td>
+            </tr>
+            <tr>
+                <td>SGST (2.5%):</td>
+                <td>₹{{ "%.2f"|format(invoice.sgst_amount) }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td>IGST (5%):</td>
+                <td>₹{{ "%.2f"|format(invoice.igst_amount) }}</td>
+            </tr>
+            {% endif %}
+            <tr class="grand-total">
+                <td><strong>Grand Total:</strong></td>
+                <td><strong>₹{{ "%.2f"|format(invoice.grand_total) }}</strong></td>
+            </tr>
+            <tr>
+                <td>Payment Status:</td>
+                <td>{{ invoice.payment_status }}</td>
+            </tr>
+            <tr>
+                <td>Remaining Due:</td>
+                <td>₹{{ "%.2f"|format(invoice.remaining_due) }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="print-actions">
+        <button onclick="window.print()">Print Invoice</button>
+        <a href="/invoices/{{ invoice.id }}/challan">View Challan</a>
+        <a href="/invoices">Back to List</a>
+    </div>
+</div>
+
+<style>
+    @media print {
+
+        .print-actions,
+        nav {
+            display: none;
+        }
+    }
+
+    .print-container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+    }
+
+    th,
+    td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #f5f5f5;
+    }
+
+    .totals-table {
+        width: 400px;
+        margin-left: auto;
+    }
+
+    .totals-table td {
+        text-align: right;
+    }
+
+    .grand-total {
+        border-top: 2px solid #333;
+        font-size: 1.2em;
+    }
+</style>
+{% endblock %}

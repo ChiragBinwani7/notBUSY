@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Payments{% endblock %}
+
+{% block content %}
+<div class="flex-between mb-2">
+    <h1>Payments & Ledgers</h1>
+    <a href="/payments/record" class="btn">Record Payment</a>
+</div>
+
+<!-- Customers -->
+<div class="card">
+    <h2>Customers (Receivables)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Total Receivable</th>
+                <th>Received</th>
+                <th>Balance</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for customer in balances.customers %}
+            <tr>
+                <td>{{ customer.customer_name }}</td>
+                <td>₹{{ "%.2f"|format(customer.total_receivable) }}</td>
+                <td>₹{{ "%.2f"|format(customer.total_received) }}</td>
+                <td>₹{{ "%.2f"|format(customer.balance) }}</td>
+                <td>
+                    <a href="/payments/ledger/CUSTOMER/{{ customer.customer_name }}" class="btn btn-secondary">View
+                        Ledger</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Vendors -->
+<div class="card">
+    <h2>Vendors (Payables)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Vendor</th>
+                <th>Total Payable</th>
+                <th>Paid</th>
+                <th>Balance</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vendor in balances.vendors %}
+            <tr>
+                <td>{{ vendor.vendor_name }}</td>
+                <td>₹{{ "%.2f"|format(vendor.total_payable) }}</td>
+                <td>₹{{ "%.2f"|format(vendor.total_paid) }}</td>
+                <td>₹{{ "%.2f"|format(vendor.balance) }}</td>
+                <td>
+                    <a href="/payments/ledger/VENDOR/{{ vendor.vendor_name }}" class="btn btn-secondary">View Ledger</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Mills -->
+<div class="card">
+    <h2>Mills (Payables)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Mill</th>
+                <th>Total Payable</th>
+                <th>Paid</th>
+                <th>Balance</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mill in balances.mills %}
+            <tr>
+                <td>{{ mill.mill_name }}</td>
+                <td>₹{{ "%.2f"|format(mill.total_payable) }}</td>
+                <td>₹{{ "%.2f"|format(mill.total_paid) }}</td>
+                <td>₹{{ "%.2f"|format(mill.balance) }}</td>
+                <td>
+                    <a href="/payments/ledger/MILL/{{ mill.mill_name }}" class="btn btn-secondary">View Ledger</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

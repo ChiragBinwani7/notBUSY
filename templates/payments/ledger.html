@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Ledger{% endblock %}
+
+{% block content %}
+<h1>{{ party_type }} Ledger: {{ ledger.get(party_type.lower() + '_name') or ledger.get('vendor_name') or
+    ledger.get('mill_name') or ledger.get('customer_name') }}</h1>
+
+<div class="card">
+    <p><strong>Total:</strong> ₹{{ "%.2f"|format(ledger.get('total_payable') or ledger.get('total_receivable')) }}</p>
+    <p><strong>Paid/Received:</strong> ₹{{ "%.2f"|format(ledger.get('total_paid') or ledger.get('total_received')) }}
+    </p>
+    <p><strong>Balance:</strong> ₹{{ "%.2f"|format(ledger.balance) }}</p>
+
+    <h3>Transactions</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Debit</th>
+                <th>Credit</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in ledger.entries %}
+            <tr>
+                <td>{{ entry.transaction_date.strftime('%Y-%m-%d') }}</td>
+                <td>{{ entry.transaction_type }}</td>
+                <td>{{ entry.description }}</td>
+                <td>₹{{ "%.2f"|format(entry.debit) }}</td>
+                <td>₹{{ "%.2f"|format(entry.credit) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<a href="/payments" class="btn btn-secondary">Back to Payments</a>
+{% endblock %}

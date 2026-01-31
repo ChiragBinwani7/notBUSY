@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Challan - {{ invoice.invoice_number }}{% endblock %}
+
+{% block content %}
+<div class="print-container">
+    <h1>DELIVERY CHALLAN</h1>
+
+    <div class="header-info">
+        <p><strong>Challan No:</strong> {{ invoice.invoice_number }}</p>
+        <p><strong>Date:</strong> {{ invoice.invoice_date.strftime('%d-%m-%Y') }}</p>
+    </div>
+
+    <div class="party-info">
+        <h3>To:</h3>
+        <p><strong>{{ invoice.customer_name }}</strong></p>
+        <p>{{ invoice.customer_state }}</p>
+        <p><strong>Transport:</strong> {{ invoice.transport_name }}</p>
+    </div>
+
+    <h3>Items Dispatched:</h3>
+    {% for item in line_items %}
+    <div class="item-section">
+        <h4>{{ item.product_name }} - {{ item.finished_variant }}</h4>
+        <p><strong>Parcels:</strong> {{ item.parcel_count }}</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Taka #</th>
+                    <th>Meters</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for meters in item.taka_meters %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ "%.2f"|format(meters) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <p><strong>Total Raw Meters:</strong> {{ "%.2f"|format(item.raw_meters) }}</p>
+        <p><strong>Fold:</strong> {{ item.fold_percent }}% (shown for reference, NOT applied)</p>
+    </div>
+    {% endfor %}
+
+    <div class="totals">
+        <p><strong>Total Parcels:</strong> {{ invoice.total_parcels }}</p>
+    </div>
+
+    <div class="print-actions">
+        <button onclick="window.print()">Print Challan</button>
+        <a href="/invoices/{{ invoice.id }}/print">View Invoice</a>
+        <a href="/invoices">Back to List</a>
+    </div>
+</div>
+
+<style>
+    @media print {
+
+        .print-actions,
+        nav {
+            display: none;
+        }
+    }
+
+    .print-container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+
+    .item-section {
+        margin: 20px 0;
+        border: 1px solid #ddd;
+        padding: 15px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+    }
+
+    th,
+    td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #f5f5f5;
+    }
+</style>
+{% endblock %}

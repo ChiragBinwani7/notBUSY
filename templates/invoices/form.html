@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}New Bill / Invoice{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>New Bill / Invoice</h2>
+    <form method="post" action="/invoices/create" id="invoiceForm">
+        <h3>Party Details</h3>
+        <div class="form-group">
+            <label>Customer Name:</label>
+            <input type="text" name="customer_name" required>
+        </div>
+
+        <div class="form-group">
+            <label>Customer State:</label>
+            <input type="text" name="customer_state" required placeholder="e.g., Gujarat, Maharashtra">
+        </div>
+
+        <div class="form-group">
+            <label>Transport Name:</label>
+            <input type="text" name="transport_name" required>
+        </div>
+
+        <hr>
+
+        <h3>Product Lines</h3>
+        <div id="productLines">
+            <!-- Product lines will be added here -->
+        </div>
+
+        <button type="button" onclick="addProductLine()" class="btn-secondary">+ Add Product</button>
+
+        <hr>
+
+        <div id="totals">
+            <p><strong>Total Parcels:</strong> <span id="totalParcels">0</span></p>
+            <p><strong>Estimated Total:</strong> ₹<span id="estimatedTotal">0.00</span></p>
+        </div>
+
+        <input type="hidden" name="line_items_json" id="lineItemsJson">
+
+        <div class="form-actions">
+            <button type="submit">Create Invoice</button>
+            <a href="/invoices" class="btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    const productVariants = {{ product_variants | safe }};
+    const products = {{ products | tojson | safe }};
+
+    let lineCounter = 0;
+
+    function addProductLine() {
+        lineCounter++;
+        const container = document.getElementById('productLines');
+
+        const lineDiv = document.createElement('div');
+        lineDiv.className = 'product-line';
+        lineDiv.id = `line-${lineCounter}`;
+        lineDiv.innerHTML = `
+        <h4>Product ${lineCounter}</h4>
+        <div class="form-group">
+            <label>Product:</label>
+            <select onchange="updateVariants(${lineCounter})" id="product-${lineCounter}" required>
+                <option value="">Select Product</option>
+                ${products.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Finished Variant:</label>
+            <select id="variant-${lineCounter}" required>
+                <option value="">Select variant first</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Parcels:</label>
+            <input type="number" id="parcels-${lineCounter}" min="1" value="1" onchange="generateTakaInputs(${lineCounter})" required>
+        </div>
+        
+        <div id="takaInputs-${lineCounter}"></div>
+        
+        <div class="form-group">
+            <label>Fold %:</label>
+            <input type="number" step="0.01" id="fold-${lineCounter}" value="0" required>
+        </div>
+        
+        <div class="form-group">
+            <label>Rate per Meter (₹):</label>
+            <input type="number" step="0.01" id="rate-${lineCounter}" required>
+        </div>
+        
+        <button type="button" onclick="removeLine(${lineCounter})" class="btn-danger">Remove</button>
+        <hr>
+    `;
+
+        container.appendChild(lineDiv);
+    }
+
+    function updateVariants(lineId) {
+        const productSelect = document.getElementById(`product-${lineId}`);
+        const variantSelect = document.getElementById(`variant-${lineId}`);
+        const productId = productSelect.value;
+
+        variantSelect.innerHTML = '<option value="">Select variant</option>';
+
+        if (productId && productVariants[productId]) {
+            productVariants[productId].forEach(variant => {
+                const option = document.createElement('option');
+                option.value = variant;
+                option.textContent = variant;
+                variantSelect.appendChild(option);
+            });
+        }
+    }
+
+    function generateTakaInputs(lineId) {
+        const parcels = parseInt(document.getElementById(`parcels-${lineId}`).value) || 0;
+        const productId = document.getElementById(`product-${lineId}`).value;
+
+        if (!productId) return;
+
+        const product = products.find(p => p.id == productId);
+        const takasPerParcel = product ? product.takas_per_parcel : 4;
+        const totalTakas = parcels * takasPerParcel;
+
+        const container = document.getElementById(`takaInputs-${lineId}`);
+        container.innerHTML = '<h5>Enter meters for each taka:</h5>';
+
+        for (let i = 1; i <= totalTakas; i++) {
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.step = '0.01';
+            input.placeholder = `Taka ${i}`;
+            input.id = `taka-${lineId}-${i}`;
+            input.style.width = '100px';
+            input.style.margin = '5px';
+            input.required = true;
+            container.appendChild(input);
+        }
+    }
+
+    function removeLine(lineId) {
+        const line = document.getElementById(`line-${lineId}`);
+        if (line) line.remove();
+    }
+
+    document.getElementById('invoiceForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const lines = [];
+        const lineElements = document.querySelectorAll('.product-line');
+
+        lineElements.forEach(lineDiv => {
+            const lineId = lineDiv.id.split('-')[1];
+            const productId = parseInt(document.getElementById(`product-${lineId}`).value);
+            const variant = document.getElementById(`variant-${lineId}`).value;
+            const parcels = parseInt(document.getElementById(`parcels-${lineId}`).value);
+            const fold = parseFloat(document.getElementById(`fold-${lineId}`).value);
+            const rate = parseFloat(document.getElementById(`rate-${lineId}`).value);
+
+            // Collect taka meters
+            const takaMeters = [];
+            const takaInputs = lineDiv.querySelectorAll('[id^="taka-"]');
+            takaInputs.forEach(input => {
+                takaMeters.push(parseFloat(input.value) || 0);
+            });
+
+            lines.push({
+                product_id: productId,
+                finished_variant: variant,
+                parcel_count: parcels,
+                taka_meters: takaMeters,
+                fold_percent: fold,
+                rate_per_meter: rate
+            });
+        });
+
+        document.getElementById('lineItemsJson').value = JSON.stringify(lines);
+        this.submit();
+    });
+
+    // Add first product line on load
+    addProductLine();
+</script>
+
+<style>
+    .product-line {
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}

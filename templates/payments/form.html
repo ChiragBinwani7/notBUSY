@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Record Payment{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Record Payment</h2>
+    <form method="post" action="/payments/record" id="paymentForm">
+        <div class="form-group">
+            <label>Party Type:</label>
+            <select name="party_type" id="partyType" required onchange="handlePartyTypeChange()">
+                <option value="">Select Type</option>
+                <option value="VENDOR">Vendor</option>
+                <option value="MILL">Mill</option>
+                <option value="CUSTOMER">Customer</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Party Name:</label>
+            <input type="text" name="party_name" id="partyName" required onblur="loadCustomerInvoices()">
+        </div>
+
+        <div id="invoiceSection" style="display: none;">
+            <h3>Unpaid Invoices</h3>
+            <div id="invoiceList"></div>
+        </div>
+
+        <div class="form-group">
+            <label>Payment Amount (₹):</label>
+            <input type="number" step="0.01" name="amount" required>
+        </div>
+
+        <div class="form-group">
+            <label>Payment Method:</label>
+            <select name="payment_method">
+                <option value="CASH">Cash</option>
+                <option value="BANK">Bank Transfer</option>
+                <option value="CHEQUE">Cheque</option>
+                <option value="UPI">UPI</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Notes:</label>
+            <textarea name="notes" rows="3"></textarea>
+        </div>
+
+        <input type="hidden" name="invoice_allocations_json" id="invoiceAllocationsJson">
+
+        <div class="form-actions">
+            <button type="submit">Record Payment</button>
+            <a href="/payments" class="btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    function handlePartyTypeChange() {
+        const partyType = document.getElementById('partyType').value;
+        const invoiceSection = document.getElementById('invoiceSection');
+
+        if (partyType === 'CUSTOMER') {
+            invoiceSection.style.display = 'block';
+        } else {
+            invoiceSection.style.display = 'none';
+        }
+    }
+
+    async function loadCustomerInvoices() {
+        const partyType = document.getElementById('partyType').value;
+        const partyName = document.getElementById('partyName').value;
+
+        if (partyType !== 'CUSTOMER' || !partyName) return;
+
+        try {
+            const response = await fetch(`/payments/customer/${encodeURIComponent(partyName)}/invoices`);
+            const invoices = await response.json();
+
+            const invoiceList = document.getElementById('invoiceList');
+            if (invoices.length === 0) {
+                invoiceList.innerHTML = '<p>No unpaid invoices found.</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Select</th><th>Invoice #</th><th>Date</th><th>Total</th><th>Remaining</th><th>Allocate</th></tr></thead><tbody>';
+
+            invoices.forEach(inv => {
+                html += `
+                <tr>
+                    <td><input type="checkbox" class="invoice-checkbox" data-invoice-id="${inv.id}" data-remaining="${inv.remaining_due}"></td>
+                    <td>${inv.invoice_number}</td>
+                    <td>${inv.date}</td>
+                    <td>₹${inv.grand_total.toFixed(2)}</td>
+                    <td>₹${inv.remaining_due.toFixed(2)}</td>
+                    <td><input type="number" step="0.01" class="allocation-input" data-invoice-id="${inv.id}" placeholder="Amount" disabled></td>
+                </tr>
+            `;
+            });
+
+            html += '</tbody></table>';
+            invoiceList.innerHTML = html;
+
+            // Add event listeners
+            document.querySelectorAll('.invoice-checkbox').forEach(cb => {
+                cb.addEventListener('change', function () {
+                    const input = document.querySelector(`.allocation-input[data-invoice-id="${this.dataset.invoiceId}"]`);
+                    input.disabled = !this.checked;
+                    if (this.checked) {
+                        input.value = this.dataset.remaining;
+                    } else {
+                        input.value = '';
+                    }
+                });
+            });
+
+        } catch (error) {
+            console.error('Error loading invoices:', error);
+        }
+    }
+
+    document.getElementById('paymentForm').addEventListener('submit', function (e) {
+        const partyType = document.getElementById('partyType').value;
+
+        if (partyType === 'CUSTOMER') {
+            const allocations = [];
+            document.querySelectorAll('.invoice-checkbox:checked').forEach(cb => {
+                const invoiceId = cb.dataset.invoiceId;
+                const amount = parseFloat(document.querySelector(`.allocation-input[data-invoice-id="${invoiceId}"]`).value) || 0;
+
+                if (amount > 0) {
+                    allocations.push({
+                        invoice_id: parseInt(invoiceId),
+                        amount: amount
+                    });
+                }
+            });
+
+            if (allocations.length > 0) {
+                document.getElementById('invoiceAllocationsJson').value = JSON.stringify(allocations);
+            }
+        }
+    });
+</script>
+
+<style>
+    #invoiceList table {
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    #invoiceList th,
+    #invoiceList td {
+        padding: 8px;
+        text-align: left;
+    }
+
+    .allocation-input {
+        width: 100px;
+    }
+</style>
+{% endblock %}

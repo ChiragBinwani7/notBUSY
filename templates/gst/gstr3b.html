@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}GSTR-3B Summary{% endblock %}
+
+{% block content %}
+<h1>GSTR-3B Summary - {{ year }}/{{ month }}</h1>
+
+<div class="card">
+    <h2>Output GST (Sales)</h2>
+    <table>
+        <tr>
+            <th>CGST</th>
+            <td>₹{{ "%.2f"|format(summary.sales.cgst) }}</td>
+        </tr>
+        <tr>
+            <th>SGST</th>
+            <td>₹{{ "%.2f"|format(summary.sales.sgst) }}</td>
+        </tr>
+        <tr>
+            <th>IGST</th>
+            <td>₹{{ "%.2f"|format(summary.sales.igst) }}</td>
+        </tr>
+        <tr style="font-weight: bold;">
+            <th>Total Sales GST</th>
+            <td>₹{{ "%.2f"|format(summary.sales.total_gst) }}</td>
+        </tr>
+    </table>
+</div>
+
+<div class="card">
+    <h2>Input GST (Purchases)</h2>
+    <table>
+        <tr>
+            <th>CGST</th>
+            <td>₹{{ "%.2f"|format(summary.purchases.cgst) }}</td>
+        </tr>
+        <tr>
+            <th>SGST</th>
+            <td>₹{{ "%.2f"|format(summary.purchases.sgst) }}</td>
+        </tr>
+        <tr>
+            <th>IGST</th>
+            <td>₹{{ "%.2f"|format(summary.purchases.igst) }}</td>
+        </tr>
+        <tr style="font-weight: bold;">
+            <th>Total Purchase GST</th>
+            <td>₹{{ "%.2f"|format(summary.purchases.total_gst) }}</td>
+        </tr>
+    </table>
+    <p><em>Grey Purchases: {{ summary.purchases.grey_count }} | Mill Jobs: {{ summary.purchases.mill_count }}</em></p>
+</div>
+
+<div class="card">
+    <h2 style="color: #e74c3c;">Net GST Payable</h2>
+    <p style="font-size: 2rem; font-weight: bold;">₹{{ "%.2f"|format(summary.net_gst_payable) }}</p>
+</div>
+
+<a href="/gst" class="btn btn-secondary">Back to GST Reports</a>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Purchase GST Report{% endblock %}
+
+{% block content %}
+<h1>Purchase GST Report - {{ year }}/{{ month }}</h1>
+
+<div class="card">
+    <h2>Grey Purchases</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Vendor</th>
+                <th>State</th>
+                <th>Taxable Amount</th>
+                <th>CGST</th>
+                <th>SGST</th>
+                <th>IGST</th>
+                <th>Total GST</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in grey_purchases %}
+            <tr>
+                <td>{{ t.transaction_date.strftime('%Y-%m-%d') }}</td>
+                <td>{{ t.party_name }}</td>
+                <td>{{ t.party_state }}</td>
+                <td>₹{{ "%.2f"|format(t.taxable_amount) }}</td>
+                <td>₹{{ "%.2f"|format(t.cgst_amount) }}</td>
+                <td>₹{{ "%.2f"|format(t.sgst_amount) }}</td>
+                <td>₹{{ "%.2f"|format(t.igst_amount) }}</td>
+                <td>₹{{ "%.2f"|format(t.total_gst) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h2>Mill Job Work</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Mill</th>
+                <th>State</th>
+                <th>Taxable Amount</th>
+                <th>CGST</th>
+                <th>SGST</th>
+                <th>IGST</th>
+                <th>Total GST</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in mill_jobs %}
+            <tr>
+                <td>{{ t.transaction_date.strftime('%Y-%m-%d') }}</td>
+                <td>{{ t.party_name }}</td>
+                <td>{{ t.party_state }}</td>
+                <td>₹{{ "%.2f"|format(t.taxable_amount) }}</td>
+                <td>₹{{ "%.2f"|format(t.cgst_amount) }}</td>
+                <td>₹{{ "%.2f"|format(t.sgst_amount) }}</td>
+                <td>₹{{ "%.2f"|format(t.igst_amount) }}</td>
+                <td>₹{{ "%.2f"|format(t.total_gst) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<a href="/gst" class="btn btn-secondary">Back to GST Reports</a>
+{% endblock %}

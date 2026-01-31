@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Purchases{% endblock %}
+
+{% block content %}
+<div class="flex-between mb-2">
+    <h1>Purchases</h1>
+    <a href="/purchases/new" class="btn">New Purchase</a>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Date</th>
+                <th>Vendor</th>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Total Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for purchase in purchases %}
+            <tr>
+                <td>{{ purchase.id }}</td>
+                <td>{{ purchase.purchase_date.strftime('%Y-%m-%d') }}</td>
+                <td>{{ purchase.vendor_name }}</td>
+                <td>{{ purchase.product.name }}</td>
+                <td>{{ purchase.quantity }} {{ purchase.quantity_unit }}</td>
+                <td>₹{{ "%.2f"|format(purchase.total_amount) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

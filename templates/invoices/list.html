@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Invoices{% endblock %}
+
+{% block content %}
+<div class="flex-between mb-2">
+    <h1>Invoices</h1>
+    <a href="/invoices/new" class="btn">New Invoice</a>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Grand Total</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for invoice in invoices %}
+            <tr>
+                <td>{{ invoice.id }}</td>
+                <td>{{ invoice.invoice_date.strftime('%Y-%m-%d') }}</td>
+                <td>{{ invoice.customer_name }}</td>
+                <td>₹{{ "%.2f"|format(invoice.grand_total) }}</td>
+                <td>
+                    <a href="/invoices/{{ invoice.id }}/print" class="btn btn-secondary">Print</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

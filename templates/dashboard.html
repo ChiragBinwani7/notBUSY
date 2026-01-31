@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Textile Accounting{% endblock %}
+
+{% block content %}
+<h1>Dashboard</h1>
+
+<!-- Stock Summary -->
+<div class="card">
+    <h2>Stock Summary</h2>
+    {% for product_name, states in data.stock.items() %}
+    <h3>{{ product_name }}</h3>
+    <div class="stock-grid">
+        <div class="stock-item">
+            <h4>Grey Purchased</h4>
+            <div class="meters">{{ "%.2f"|format(states.GREY_PURCHASED.meters) }} m</div>
+            <div>{{ states.GREY_PURCHASED.takas }} takas</div>
+        </div>
+        <div class="stock-item">
+            <h4>In Mill</h4>
+            <div class="meters">{{ "%.2f"|format(states.IN_MILL.meters) }} m</div>
+            <div>{{ states.IN_MILL.takas }} takas</div>
+        </div>
+        <div class="stock-item">
+            <h4>In Shop</h4>
+            <div class="meters">{{ "%.2f"|format(states.IN_SHOP.meters) }} m</div>
+            <div>{{ states.IN_SHOP.takas }} takas</div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Money Summary -->
+<div class="dashboard-grid">
+    <div class="stat-card">
+        <h3>Total Receivable</h3>
+        <div class="value">₹{{ "%.2f"|format(data.money.total_receivable) }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Total Payable</h3>
+        <div class="value">₹{{ "%.2f"|format(data.money.total_payable) }}</div>
+    </div>
+</div>
+
+<!-- Today's Activity -->
+<div class="card">
+    <h2>Today's Activity</h2>
+    <div class="dashboard-grid">
+        <div>
+            <h3>Invoices: {{ data.today.invoices }}</h3>
+        </div>
+        <div>
+            <h3>Challans: {{ data.today.challans }}</h3>
+        </div>
+        <div>
+            <h3>Payments: {{ data.today.payments }}</h3>
+        </div>
+    </div>
+</div>
+
+<!-- GST Summary -->
+<div class="card">
+    <h2>GST Summary (Current Month)</h2>
+    <table>
+        <tr>
+            <th>Type</th>
+            <th>CGST</th>
+            <th>SGST</th>
+            <th>IGST</th>
+            <th>Total</th>
+        </tr>
+        <tr>
+            <td>Sales GST</td>
+            <td>₹{{ "%.2f"|format(data.gst_current_month.sales.cgst) }}</td>
+            <td>₹{{ "%.2f"|format(data.gst_current_month.sales.sgst) }}</td>
+            <td>₹{{ "%.2f"|format(data.gst_current_month.sales.igst) }}</td>
+            <td>₹{{ "%.2f"|format(data.gst_current_month.sales.total_gst) }}</td>
+        </tr>
+        <tr>
+            <td>Purchase GST</td>
+            <td>₹{{ "%.2f"|format(data.gst_current_month.purchases.cgst) }}</td>
+            <td>₹{{ "%.2f"|format(data.gst_current_month.purchases.sgst) }}</td>
+            <td>₹{{ "%.2f"|format(data.gst_current_month.purchases.igst) }}</td>
+            <td>₹{{ "%.2f"|format(data.gst_current_month.purchases.total_gst) }}</td>
+        </tr>
+        <tr style="font-weight: bold;">
+            <td>Net GST Payable</td>
+            <td colspan="3"></td>
+            <td>₹{{ "%.2f"|format(data.gst_current_month.net_gst_payable) }}</td>
+        </tr>
+    </table>
+</div>
+{% endblock %}

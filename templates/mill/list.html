@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Mill Jobs{% endblock %}
+
+{% block content %}
+<div class="flex-between mb-2">
+    <h1>Mill Jobs</h1>
+    <a href="/mill/send" class="btn">Send to Mill</a>
+</div>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Mill</th>
+                <th>Product</th>
+                <th>Status</th>
+                <th>Sent Date</th>
+                <th>Received Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in mill_jobs %}
+            <tr>
+                <td>{{ job.id }}</td>
+                <td>{{ job.mill_name }}</td>
+                <td>{{ job.product.name }}</td>
+                <td>{{ job.status }}</td>
+                <td>{{ job.sent_date.strftime('%Y-%m-%d') }}</td>
+                <td>{{ job.received_date.strftime('%Y-%m-%d') if job.received_date else '-' }}</td>
+                <td>
+                    {% if job.status == 'SENT' %}
+                    <a href="/mill/receive/{{ job.id }}" class="btn btn-success">Receive</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
