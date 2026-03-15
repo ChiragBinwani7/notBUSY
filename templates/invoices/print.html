@@ -4,137 +4,309 @@
 
 {% block content %}
 <div class="print-container">
-    <h1>TAX INVOICE</h1>
 
-    <div class="header-info">
-        <p><strong>Invoice No:</strong> {{ invoice.invoice_number }}</p>
-        <p><strong>Date:</strong> {{ invoice.invoice_date.strftime('%d-%m-%Y') }}</p>
+    <!-- Company Header -->
+    <div class="company-header">
+        <div class="company-info">
+            <h2 class="company-name">📦 {{ company_name }}</h2>
+            <p>{{ company_type }}</p>
+            <p>{{ company_address }}</p>
+            <p><strong>GSTIN:</strong> {{ company_gstin }} &nbsp;|&nbsp; <strong>Phone:</strong> {{ company_phone }}</p>
+        </div>
+        <div class="invoice-title-box">
+            <h1>TAX INVOICE</h1>
+            <table class="meta-table">
+                <tr><th>Invoice No.</th><td>{{ invoice.invoice_number }}</td></tr>
+                <tr><th>Date</th><td>{{ invoice.invoice_date.strftime('%d-%m-%Y') }}</td></tr>
+                {% if invoice.due_date %}
+                <tr>
+                    <th>Due Date</th>
+                    <td {% if invoice.is_overdue %}style="color:#dc2626;font-weight:bold"{% endif %}>
+                        {{ invoice.due_date.strftime('%d-%m-%Y') }}
+                        {% if invoice.is_overdue %} ⚠{% endif %}
+                    </td>
+                </tr>
+                {% endif %}
+                <tr><th>Terms</th><td>Net {{ invoice.payment_terms_days }} Days</td></tr>
+            </table>
+        </div>
     </div>
 
-    <div class="party-info">
-        <h3>Bill To:</h3>
-        <p><strong>{{ invoice.customer_name }}</strong></p>
-        <p>{{ invoice.customer_state }}</p>
-        <p><strong>Transport:</strong> {{ invoice.transport_name }}</p>
+    <hr class="divider">
+
+    <!-- Bill To / Transport -->
+    <div class="party-transport-row">
+        <div class="party-info-box">
+            <div class="box-label">BILL TO</div>
+            <p class="party-name">{{ invoice.customer_name }}</p>
+            <p>{{ invoice.customer_state }}</p>
+        </div>
+        <div class="party-info-box">
+            <div class="box-label">TRANSPORT</div>
+            <p>{{ invoice.transport_name or '—' }}</p>
+            <p><small>Dispatch by road</small></p>
+        </div>
     </div>
 
-    <h3>Items:</h3>
-    <table>
+    <!-- Line Items -->
+    <h3 style="margin:1rem 0 .4rem;font-size:1rem;text-transform:uppercase;letter-spacing:.05em;color:#555">Particulars</h3>
+    <table class="items-table">
         <thead>
             <tr>
+                <th>#</th>
                 <th>Product</th>
                 <th>Variant</th>
-                <th>Parcels</th>
-                <th>Net Meters</th>
-                <th>Rate/M</th>
-                <th>Amount</th>
+                <th style="text-align:center">Parcels</th>
+                <th style="text-align:right">Net Meters</th>
+                <th style="text-align:right">Rate/M (₹)</th>
+                <th style="text-align:right">Amount (₹)</th>
             </tr>
         </thead>
         <tbody>
             {% for item in line_items %}
             <tr>
+                <td>{{ loop.index }}</td>
                 <td>{{ item.product_name }}</td>
                 <td>{{ item.finished_variant }}</td>
-                <td>{{ item.parcel_count }}</td>
-                <td>{{ "%.2f"|format(item.net_meters) }}</td>
-                <td>₹{{ "%.2f"|format(item.rate_per_meter) }}</td>
-                <td>₹{{ "%.2f"|format(item.item_value) }}</td>
+                <td style="text-align:center">{{ item.parcel_count }}</td>
+                <td style="text-align:right">{{ "%.2f"|format(item.net_meters) }}</td>
+                <td style="text-align:right">{{ "%.2f"|format(item.rate_per_meter) }}</td>
+                <td style="text-align:right">{{ "%.2f"|format(item.item_value) }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <div class="invoice-totals">
+    <!-- Totals -->
+    <div class="totals-section">
+        <div class="amount-words">
+            <strong>Amount in Words:</strong><br>
+            <em id="amountWords">Rupees — (see below)</em>
+        </div>
         <table class="totals-table">
             <tr>
-                <td>Product Value:</td>
+                <td>Product Value</td>
                 <td>₹{{ "%.2f"|format(invoice.product_value) }}</td>
             </tr>
             <tr>
-                <td>Freight ({{ invoice.total_parcels }} parcels × ₹{{ freight_per_parcel }}):</td>
+                <td>Freight ({{ invoice.total_parcels }} parcels × ₹{{ freight_per_parcel }})</td>
                 <td>₹{{ "%.2f"|format(invoice.freight_charges) }}</td>
+            </tr>
+            <tr>
+                <td>Taxable Amount</td>
+                <td>₹{{ "%.2f"|format(invoice.product_value + invoice.freight_charges) }}</td>
             </tr>
             {% if invoice.cgst_amount > 0 %}
             <tr>
-                <td>CGST ({{ "%.1f"|format(gst_rates.cgst) }}%):</td>
+                <td>CGST @ {{ "%.1f"|format(gst_rates.cgst) }}%</td>
                 <td>₹{{ "%.2f"|format(invoice.cgst_amount) }}</td>
             </tr>
             <tr>
-                <td>SGST ({{ "%.1f"|format(gst_rates.sgst) }}%):</td>
+                <td>SGST @ {{ "%.1f"|format(gst_rates.sgst) }}%</td>
                 <td>₹{{ "%.2f"|format(invoice.sgst_amount) }}</td>
             </tr>
             {% else %}
             <tr>
-                <td>IGST ({{ "%.1f"|format(gst_rates.igst) }}%):</td>
+                <td>IGST @ {{ "%.1f"|format(gst_rates.igst) }}%</td>
                 <td>₹{{ "%.2f"|format(invoice.igst_amount) }}</td>
             </tr>
             {% endif %}
-            <tr class="grand-total">
-                <td><strong>Grand Total:</strong></td>
+            <tr class="grand-total-row">
+                <td><strong>GRAND TOTAL</strong></td>
                 <td><strong>₹{{ "%.2f"|format(invoice.grand_total) }}</strong></td>
             </tr>
+            {% if invoice.remaining_due < invoice.grand_total %}
             <tr>
-                <td>Payment Status:</td>
-                <td>{{ invoice.payment_status }}</td>
+                <td>Amount Received</td>
+                <td>₹{{ "%.2f"|format(invoice.grand_total - invoice.remaining_due) }}</td>
             </tr>
-            <tr>
-                <td>Remaining Due:</td>
+            {% endif %}
+            <tr class="balance-row">
+                <td>Balance Due</td>
                 <td>₹{{ "%.2f"|format(invoice.remaining_due) }}</td>
             </tr>
         </table>
     </div>
 
+    <!-- Status Badge -->
+    <div style="margin: 1rem 0; text-align:right;">
+        <span class="badge badge-{{ invoice.payment_status | lower }}" style="font-size:.95rem;padding:.35rem .9rem;">
+            {{ invoice.payment_status }}
+        </span>
+    </div>
+
+    <!-- Footer -->
+    <div class="invoice-footer">
+        <div class="footer-left">
+            <p><strong>Bank Details:</strong></p>
+            <p>Bank Name: {{ company_bank_name }}</p>
+            <p>Account No.: {{ company_bank_account }}</p>
+            <p>IFSC: {{ company_bank_ifsc }}</p>
+            <p style="margin-top:.5rem;font-size:.8rem;color:#888">
+                E.&amp;O.E. &nbsp;|&nbsp; Subject to Gujarat jurisdiction.
+            </p>
+        </div>
+        <div class="footer-right">
+            <p><strong>For {{ company_name }}</strong></p>
+            <div style="height:50px;"></div>
+            <p style="border-top:1px solid #333;padding-top:.25rem;">Authorised Signatory</p>
+        </div>
+    </div>
+
+    <!-- Print Actions -->
     <div class="print-actions">
-        <button onclick="window.print()">Print Invoice</button>
-        <a href="/invoices/{{ invoice.id }}/challan">View Challan</a>
-        <a href="/invoices">Back to List</a>
+        <button onclick="window.print()" class="btn">🖨 Print Invoice</button>
+        <a href="/invoices/{{ invoice.id }}/challan" class="btn btn-secondary">View Challan</a>
+        <a href="/invoices" class="btn btn-secondary">Back to List</a>
     </div>
 </div>
 
 <style>
-    @media print {
+@media print {
+    .print-actions, nav, .container > h1 { display: none !important; }
+    body { margin: 0; }
+    .print-container { max-width: 100%; margin: 0; padding: 10mm; }
+}
 
-        .print-actions,
-        nav {
-            display: none;
-        }
-    }
+.print-container {
+    max-width: 860px;
+    margin: 20px auto;
+    padding: 24px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 14px;
+    color: #1a1a1a;
+}
 
-    .print-container {
-        max-width: 800px;
-        margin: 20px auto;
-        padding: 20px;
-    }
+.company-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: .5rem;
+}
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 10px 0;
-    }
+.company-info { flex: 1; }
+.company-name { font-size: 1.4rem; margin: 0 0 .2rem; color: #1a1a2e; }
+.company-info p { margin: .15rem 0; font-size: .9rem; color: #444; }
 
-    th,
-    td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
-    }
+.invoice-title-box { text-align: right; }
+.invoice-title-box h1 {
+    font-size: 1.5rem;
+    color: #1a1a2e;
+    margin: 0 0 .5rem;
+    letter-spacing: .05em;
+}
 
-    th {
-        background-color: #f5f5f5;
-    }
+.meta-table { border-collapse: collapse; margin-left: auto; font-size: .9rem; }
+.meta-table th {
+    text-align: right;
+    padding: 2px 8px 2px 0;
+    color: #555;
+    font-weight: 600;
+}
+.meta-table td { padding: 2px 0; text-align: right; }
 
-    .totals-table {
-        width: 400px;
-        margin-left: auto;
-    }
+.divider { border: none; border-top: 2px solid #1a1a2e; margin: .75rem 0; }
 
-    .totals-table td {
-        text-align: right;
-    }
+.party-transport-row {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
 
-    .grand-total {
-        border-top: 2px solid #333;
-        font-size: 1.2em;
-    }
+.party-info-box {
+    flex: 1;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: .75rem 1rem;
+}
+
+.box-label {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    color: #888;
+    margin-bottom: .3rem;
+}
+
+.party-name { font-size: 1.1rem; font-weight: 700; margin: 0; }
+.party-info-box p { margin: .15rem 0; }
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    font-size: .92rem;
+}
+
+.items-table th {
+    background: #1a1a2e;
+    color: #fff;
+    padding: 7px 10px;
+    font-weight: 600;
+    letter-spacing: .03em;
+}
+
+.items-table td {
+    border-bottom: 1px solid #eee;
+    padding: 6px 10px;
+}
+
+.items-table tbody tr:last-child td { border-bottom: 2px solid #ddd; }
+
+.totals-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.amount-words {
+    flex: 1;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: .75rem;
+    font-size: .9rem;
+    color: #555;
+}
+
+.totals-table {
+    width: 300px;
+    border-collapse: collapse;
+}
+
+.totals-table td {
+    padding: 5px 8px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.totals-table td:last-child { text-align: right; font-family: monospace; }
+
+.grand-total-row td {
+    border-top: 2px solid #1a1a2e;
+    border-bottom: 2px solid #1a1a2e;
+    font-size: 1.1rem;
+    background: #f5f5ff;
+}
+
+.balance-row td {
+    font-weight: 700;
+    color: #dc2626;
+}
+
+.invoice-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #ddd;
+    font-size: .9rem;
+}
+
+.footer-left { flex: 1; }
+.footer-right { min-width: 200px; text-align: center; }
+.footer-right p { margin: .2rem 0; }
 </style>
 {% endblock %}

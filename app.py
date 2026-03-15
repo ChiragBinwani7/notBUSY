@@ -13,7 +13,7 @@ from models.product import Product
 from models import product, inventory, purchase, mill, invoice, invoice_payment, payment, gst
 
 # Import routes
-from routes import dashboard, purchases, mill as mill_routes, invoices, payments, gst as gst_routes
+from routes import dashboard, purchases, mill as mill_routes, invoices, payments, gst as gst_routes, reports as reports_routes
 
 # Create FastAPI app
 app = FastAPI(title="Local Textile Accounting System")
@@ -28,6 +28,7 @@ app.include_router(mill_routes.router)
 app.include_router(invoices.router)
 app.include_router(payments.router)
 app.include_router(gst_routes.router)
+app.include_router(reports_routes.router)
 
 @app.on_event("startup")
 async def startup_event():
@@ -84,6 +85,17 @@ async def startup_event():
             conn.commit()
         if "payment_status" not in existing_cols:
             conn.execute(text("ALTER TABLE invoices ADD COLUMN payment_status VARCHAR NOT NULL DEFAULT 'UNPAID'"))
+            conn.commit()
+        if "payment_terms_days" not in existing_cols:
+            conn.execute(text("ALTER TABLE invoices ADD COLUMN payment_terms_days INTEGER NOT NULL DEFAULT 30"))
+            conn.commit()
+        if "due_date" not in existing_cols:
+            conn.execute(text("ALTER TABLE invoices ADD COLUMN due_date DATETIME"))
+            conn.commit()
+            # Back-fill due_date = invoice_date + 30 days
+            conn.execute(text(
+                "UPDATE invoices SET due_date = datetime(invoice_date, '+30 days') WHERE due_date IS NULL"
+            ))
             conn.commit()
 
         # ---------- purchases ----------

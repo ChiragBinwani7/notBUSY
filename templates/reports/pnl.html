@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Profit & Loss{% endblock %}
+{% block content %}
+<div class="flex-between mb-2">
+    <h1>💹 Profit &amp; Loss Summary</h1>
+    <a href="/reports" class="btn btn-secondary">← Reports</a>
+</div>
+
+<!-- Period selector -->
+<div class="card" style="padding:.8rem 1rem; margin-bottom:1rem;">
+    <form method="get" action="/reports/pnl" style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;">
+        <div class="form-group" style="margin:0">
+            <label>From Date</label>
+            <input type="date" name="from_date" value="{{ from_date }}" required>
+        </div>
+        <div class="form-group" style="margin:0">
+            <label>To Date</label>
+            <input type="date" name="to_date" value="{{ to_date }}" required>
+        </div>
+        <button type="submit" class="btn">Apply</button>
+    </form>
+</div>
+
+<p style="color:#666;margin-bottom:1.5rem;">
+    Period: <strong>{{ data.from_date.strftime('%d %B %Y') }}</strong> to <strong>{{ data.to_date.strftime('%d %B %Y') }}</strong>
+</p>
+
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+
+<!-- Income -->
+<div class="card">
+    <h2 style="color:#0f9b58; border-bottom:2px solid #0f9b58; padding-bottom:.5rem;">📈 Income</h2>
+    <table class="pl-table">
+        <tr>
+            <td>Sales (Product Value)</td>
+            <td class="amount">₹{{ "%.2f"|format(data.sales.product_value) }}</td>
+        </tr>
+        <tr>
+            <td>Freight Billed</td>
+            <td class="amount">₹{{ "%.2f"|format(data.sales.freight_billed) }}</td>
+        </tr>
+        <tr class="subtotal">
+            <td><strong>Gross Sales (excl. GST)</strong></td>
+            <td class="amount"><strong>₹{{ "%.2f"|format(data.sales.product_value + data.sales.freight_billed) }}</strong></td>
+        </tr>
+        <tr style="color:#888;font-size:.9rem">
+            <td>GST Collected (Output Tax)</td>
+            <td class="amount">₹{{ "%.2f"|format(data.sales.gst_collected) }}</td>
+        </tr>
+        <tr class="total-row">
+            <td><strong>Total Billed (incl. GST) — {{ data.sales.invoice_count }} Invoice(s)</strong></td>
+            <td class="amount"><strong>₹{{ "%.2f"|format(data.sales.total_billed) }}</strong></td>
+        </tr>
+    </table>
+</div>
+
+<!-- Expenses -->
+<div class="card">
+    <h2 style="color:#dc2626; border-bottom:2px solid #dc2626; padding-bottom:.5rem;">📉 Expenses</h2>
+    <table class="pl-table">
+        <tr>
+            <td>Grey Fabric Purchase Cost</td>
+            <td class="amount">₹{{ "%.2f"|format(data.purchases.purchase_value) }}</td>
+        </tr>
+        <tr style="color:#888;font-size:.9rem">
+            <td>Purchase GST (Input Tax Credit)</td>
+            <td class="amount">₹{{ "%.2f"|format(data.purchases.gst_paid) }}</td>
+        </tr>
+        <tr>
+            <td>Mill Job Charges ({{ data.mill_charges.count }} job(s))</td>
+            <td class="amount">₹{{ "%.2f"|format(data.mill_charges.total) }}</td>
+        </tr>
+        <tr class="total-row">
+            <td><strong>Total Expenses</strong></td>
+            <td class="amount"><strong>₹{{ "%.2f"|format(data.purchases.purchase_value + data.mill_charges.total) }}</strong></td>
+        </tr>
+    </table>
+</div>
+
+</div>
+
+<!-- Gross Profit -->
+<div class="card" style="margin-top:1.5rem; border:2px solid {% if data.gross_profit >= 0 %}#0f9b58{% else %}#dc2626{% endif %};">
+    <table class="pl-table">
+        <tr>
+            <td style="font-size:1.2rem;font-weight:700;">
+                {% if data.gross_profit >= 0 %}✅{% else %}❌{% endif %}
+                Gross Profit
+            </td>
+            <td class="amount" style="font-size:1.4rem;font-weight:700;color:{% if data.gross_profit >= 0 %}#0f9b58{% else %}#dc2626{% endif %}">
+                ₹{{ "%.2f"|format(data.gross_profit) }}
+            </td>
+        </tr>
+        <tr style="color:#888;font-size:.9rem">
+            <td>Net GST Payable (Output − Input)</td>
+            <td class="amount">₹{{ "%.2f"|format(data.gst_net_payable) }}</td>
+        </tr>
+        {% set margin = (data.gross_profit / (data.sales.product_value + data.sales.freight_billed) * 100) if (data.sales.product_value + data.sales.freight_billed) > 0 else 0 %}
+        <tr style="color:#555;font-size:.95rem">
+            <td>Gross Margin</td>
+            <td class="amount">{{ "%.1f"|format(margin) }}%</td>
+        </tr>
+    </table>
+</div>
+
+<style>
+.pl-table { width:100%; border-collapse: collapse; }
+.pl-table tr td { padding: .5rem .25rem; border-bottom: 1px solid #f0f0f0; }
+.pl-table .amount { text-align: right; font-family: monospace; }
+.pl-table .subtotal td { border-top: 1px solid #ccc; }
+.pl-table .total-row td { border-top: 2px solid #333; font-size:1.05rem; }
+</style>
+{% endblock %}

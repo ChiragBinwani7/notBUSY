@@ -22,6 +22,19 @@
             <input type="text" name="transport_name" required>
         </div>
 
+        <div class="form-group">
+            <label>Payment Terms (days):</label>
+            <select name="payment_terms_days">
+                <option value="0">Immediate</option>
+                <option value="7">Net 7</option>
+                <option value="15">Net 15</option>
+                <option value="30" selected>Net 30 (default)</option>
+                <option value="45">Net 45</option>
+                <option value="60">Net 60</option>
+                <option value="90">Net 90</option>
+            </select>
+        </div>
+
         <hr>
 
         <h3>Product Lines</h3>

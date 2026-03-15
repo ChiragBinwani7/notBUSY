@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Outstanding Receivables{% endblock %}
+{% block content %}
+<div class="flex-between mb-2">
+    <h1>📊 Outstanding Receivables</h1>
+    <a href="/reports" class="btn btn-secondary">← Reports</a>
+</div>
+
+<p style="color:#666;margin-bottom:1rem;">
+    As of {{ data.as_of.strftime('%d %B %Y') }}
+</p>
+
+<!-- Aging Summary Cards -->
+<div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+    <div class="stat-card" style="background: linear-gradient(135deg, #4776e6, #8e54e9);">
+        <h3>Total Outstanding</h3>
+        <div class="value">₹{{ "%.2f"|format(data.grand_total) }}</div>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #43b89c, #0f9b58);">
+        <h3>Current (Not Due)</h3>
+        <div class="value">₹{{ "%.2f"|format(data.grand_current) }}</div>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #f7971e, #ffd200);">
+        <h3>1 – 30 Days</h3>
+        <div class="value">₹{{ "%.2f"|format(data.grand_1_30) }}</div>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #f97316, #ef4444);">
+        <h3>31 – 60 Days</h3>
+        <div class="value">₹{{ "%.2f"|format(data.grand_31_60) }}</div>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #dc2626, #7f1d1d);">
+        <h3>61 – 90 Days</h3>
+        <div class="value">₹{{ "%.2f"|format(data.grand_61_90) }}</div>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #7f1d1d, #3b0000);">
+        <h3>&gt; 90 Days</h3>
+        <div class="value">₹{{ "%.2f"|format(data.grand_90_plus) }}</div>
+    </div>
+</div>
+
+{% if data.customers %}
+
+<!-- Customer-wise detail -->
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th style="text-align:right">Total Due</th>
+                <th style="text-align:right">Current</th>
+                <th style="text-align:right">1–30 Days</th>
+                <th style="text-align:right">31–60 Days</th>
+                <th style="text-align:right">61–90 Days</th>
+                <th style="text-align:right">&gt;90 Days</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in data.customers %}
+            <tr style="{% if c.overdue_61_90 > 0 or c.overdue_90_plus > 0 %}background:#fff5f5{% endif %}">
+                <td><strong>{{ c.customer }}</strong></td>
+                <td style="text-align:right;font-weight:bold">₹{{ "%.2f"|format(c.total) }}</td>
+                <td style="text-align:right;color:#0f9b58">
+                    {% if c.current > 0 %}₹{{ "%.2f"|format(c.current) }}{% else %}—{% endif %}
+                </td>
+                <td style="text-align:right;color:#d97706">
+                    {% if c.overdue_1_30 > 0 %}₹{{ "%.2f"|format(c.overdue_1_30) }}{% else %}—{% endif %}
+                </td>
+                <td style="text-align:right;color:#dc2626">
+                    {% if c.overdue_31_60 > 0 %}₹{{ "%.2f"|format(c.overdue_31_60) }}{% else %}—{% endif %}
+                </td>
+                <td style="text-align:right;color:#991b1b">
+                    {% if c.overdue_61_90 > 0 %}₹{{ "%.2f"|format(c.overdue_61_90) }}{% else %}—{% endif %}
+                </td>
+                <td style="text-align:right;color:#7f1d1d;font-weight:bold">
+                    {% if c.overdue_90_plus > 0 %}₹{{ "%.2f"|format(c.overdue_90_plus) }}{% else %}—{% endif %}
+                </td>
+                <td>
+                    <a href="/payments/ledger/CUSTOMER/{{ c.customer }}" class="btn btn-secondary" style="font-size:.8rem;padding:3px 8px">Ledger</a>
+                    <a href="/payments/record?party_type=CUSTOMER&party_name={{ c.customer | urlencode }}" class="btn btn-success" style="font-size:.8rem;padding:3px 8px">Receive</a>
+                </td>
+            </tr>
+            <!-- Invoice detail rows (collapsible) -->
+            {% for inv in c.invoices %}
+            <tr style="background:#fafafa;font-size:.85rem;">
+                <td style="padding-left:2rem;color:#555">↳ {{ inv.invoice_number }}</td>
+                <td style="text-align:right;color:#555">₹{{ "%.2f"|format(inv.remaining_due) }}</td>
+                <td colspan="5" style="color:#888">
+                    Invoice: {{ inv.invoice_date.strftime('%d-%m-%Y') }} &nbsp;|&nbsp;
+                    Due: {{ inv.due_date.strftime('%d-%m-%Y') }}
+                    {% if inv.days_overdue > 0 %}
+                    &nbsp;<span style="color:#dc2626;font-weight:600">⚠ {{ inv.days_overdue }} days overdue</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="/invoices/{{ inv.id }}/print" style="font-size:.8rem;color:#2563eb">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr style="font-weight:bold;background:#f0f0f0;">
+                <td>GRAND TOTAL</td>
+                <td style="text-align:right">₹{{ "%.2f"|format(data.grand_total) }}</td>
+                <td style="text-align:right">₹{{ "%.2f"|format(data.grand_current) }}</td>
+                <td style="text-align:right">₹{{ "%.2f"|format(data.grand_1_30) }}</td>
+                <td style="text-align:right">₹{{ "%.2f"|format(data.grand_31_60) }}</td>
+                <td style="text-align:right">₹{{ "%.2f"|format(data.grand_61_90) }}</td>
+                <td style="text-align:right">₹{{ "%.2f"|format(data.grand_90_plus) }}</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+{% else %}
+<div class="card" style="text-align:center;padding:3rem;color:#888">
+    ✅ No outstanding receivables! All invoices are fully paid.
+</div>
+{% endif %}
+{% endblock %}

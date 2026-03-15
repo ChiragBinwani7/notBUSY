@@ -49,6 +49,10 @@ class Invoice(Base):
     # Grand total
     grand_total = Column(Float, nullable=False)
     
+    # Payment terms & due date
+    payment_terms_days = Column(Integer, default=30)  # Net 30 by default
+    due_date = Column(DateTime, nullable=True)  # invoice_date + payment_terms_days
+
     # Payment tracking (Phase 2)
     remaining_due = Column(Float, nullable=False)  # Initially equals grand_total
     payment_status = Column(String, default="UNPAID")  # UNPAID, PARTIAL, PAID
@@ -68,3 +72,21 @@ class Invoice(Base):
     def line_items(self, items):
         """Store line items as JSON."""
         self.line_items_json = json.dumps(items)
+    
+    @property
+    def is_overdue(self):
+        """Check if invoice is overdue (past due date and not fully paid)."""
+        from datetime import datetime
+        if self.payment_status == "PAID":
+            return False
+        if self.due_date is None:
+            return False
+        return datetime.utcnow() > self.due_date
+    
+    @property
+    def days_overdue(self):
+        """Number of days overdue (0 if not overdue)."""
+        from datetime import datetime
+        if not self.is_overdue:
+            return 0
+        return (datetime.utcnow() - self.due_date).days

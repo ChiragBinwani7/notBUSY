@@ -8,12 +8,43 @@
     <a href="/invoices/new" class="btn">New Invoice</a>
 </div>
 
+<!-- Search & Filter Bar -->
+<div class="card" style="padding:.75rem 1rem; margin-bottom:1rem;">
+    <div style="display:flex; gap:1rem; flex-wrap:wrap; align-items:flex-end;">
+        <div>
+            <label style="font-size:.85rem;font-weight:600;">Search Customer</label>
+            <input type="text" id="searchCustomer" placeholder="Type customer name…"
+                oninput="filterInvoices()" style="width:220px;margin-top:.25rem;">
+        </div>
+        <div>
+            <label style="font-size:.85rem;font-weight:600;">Status</label>
+            <select id="filterStatus" onchange="filterInvoices()" style="width:130px;margin-top:.25rem;">
+                <option value="">All</option>
+                <option value="UNPAID">Unpaid</option>
+                <option value="PARTIAL">Partial</option>
+                <option value="PAID">Paid</option>
+            </select>
+        </div>
+        <div>
+            <label style="font-size:.85rem;font-weight:600;">From Date</label>
+            <input type="date" id="filterFrom" oninput="filterInvoices()" style="width:150px;margin-top:.25rem;">
+        </div>
+        <div>
+            <label style="font-size:.85rem;font-weight:600;">To Date</label>
+            <input type="date" id="filterTo" oninput="filterInvoices()" style="width:150px;margin-top:.25rem;">
+        </div>
+        <button onclick="clearFilters()" class="btn btn-secondary">Clear</button>
+        <span id="filterCount" style="font-size:.9rem;color:#888;align-self:center;"></span>
+    </div>
+</div>
+
 <div class="card">
-    <table>
+    <table id="invoiceTable">
         <thead>
             <tr>
                 <th>Invoice No.</th>
                 <th>Date</th>
+                <th>Due Date</th>
                 <th>Customer</th>
                 <th>Grand Total</th>
                 <th>Status</th>
@@ -23,9 +54,25 @@
         </thead>
         <tbody>
             {% for invoice in invoices %}
-            <tr>
+            <tr class="inv-row"
+                data-customer="{{ invoice.customer_name | lower }}"
+                data-status="{{ invoice.payment_status }}"
+                data-date="{{ invoice.invoice_date.strftime('%Y-%m-%d') }}"
+                {% if invoice.is_overdue %}style="background:#fff5f5"{% endif %}>
                 <td>{{ invoice.invoice_number }}</td>
                 <td>{{ invoice.invoice_date.strftime('%d-%m-%Y') }}</td>
+                <td>
+                    {% if invoice.due_date %}
+                        {% if invoice.is_overdue %}
+                        <span style="color:#dc2626;font-weight:600">
+                            ⚠ {{ invoice.due_date.strftime('%d-%m-%Y') }}
+                            <br><small>({{ invoice.days_overdue }}d overdue)</small>
+                        </span>
+                        {% else %}
+                        {{ invoice.due_date.strftime('%d-%m-%Y') }}
+                        {% endif %}
+                    {% else %}—{% endif %}
+                </td>
                 <td>{{ invoice.customer_name }}</td>
                 <td>₹{{ "%.2f"|format(invoice.grand_total) }}</td>
                 <td>
@@ -33,14 +80,57 @@
                         {{ invoice.payment_status }}
                     </span>
                 </td>
-                <td>₹{{ "%.2f"|format(invoice.remaining_due) }}</td>
+                <td>
+                    {% if invoice.remaining_due > 0 %}
+                    <strong>₹{{ "%.2f"|format(invoice.remaining_due) }}</strong>
+                    {% else %}—{% endif %}
+                </td>
                 <td>
                     <a href="/invoices/{{ invoice.id }}/print" class="btn btn-secondary">Invoice</a>
                     <a href="/invoices/{{ invoice.id }}/challan" class="btn btn-secondary">Challan</a>
+                    {% if invoice.remaining_due > 0 %}
+                    <a href="/payments/record?party_type=CUSTOMER&party_name={{ invoice.customer_name | urlencode }}"
+                        class="btn btn-success" style="font-size:.8rem;padding:4px 8px">Receive</a>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    <p id="noResults" style="display:none;text-align:center;color:#888;padding:1.5rem;">No invoices match your filter.</p>
 </div>
+
+<script>
+function filterInvoices() {
+    const customer = document.getElementById('searchCustomer').value.toLowerCase();
+    const status = document.getElementById('filterStatus').value;
+    const from = document.getElementById('filterFrom').value;
+    const to = document.getElementById('filterTo').value;
+
+    let visible = 0;
+    document.querySelectorAll('.inv-row').forEach(row => {
+        const matchCust = !customer || row.dataset.customer.includes(customer);
+        const matchStatus = !status || row.dataset.status === status;
+        const rowDate = row.dataset.date;
+        const matchFrom = !from || rowDate >= from;
+        const matchTo = !to || rowDate <= to;
+        const show = matchCust && matchStatus && matchFrom && matchTo;
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+
+    const total = document.querySelectorAll('.inv-row').length;
+    document.getElementById('filterCount').textContent =
+        (customer || status || from || to) ? `Showing ${visible} of ${total}` : '';
+    document.getElementById('noResults').style.display = visible === 0 ? '' : 'none';
+}
+
+function clearFilters() {
+    document.getElementById('searchCustomer').value = '';
+    document.getElementById('filterStatus').value = '';
+    document.getElementById('filterFrom').value = '';
+    document.getElementById('filterTo').value = '';
+    filterInvoices();
+}
+</script>
 {% endblock %}
