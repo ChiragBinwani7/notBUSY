@@ -6,7 +6,7 @@ from models.product import Product
 from models.payment import CustomerLedger
 from models.gst import GSTTransaction
 from services.inventory_service import InventoryService
-from core.config import GSTTransactionType, GUJARAT_STATE, GST_RATE_CGST, GST_RATE_SGST, GST_RATE_IGST, FREIGHT_PER_PARCEL
+from core.config import GSTTransactionType, GUJARAT_STATE, GST_RATES, FREIGHT_PER_PARCEL
 from datetime import datetime
 import json
 
@@ -118,13 +118,13 @@ class InvoiceService:
         taxable_amount = product_value + freight_charges
         
         if customer_state == GUJARAT_STATE:
-            cgst_amount = taxable_amount * GST_RATE_CGST / 100
-            sgst_amount = taxable_amount * GST_RATE_SGST / 100
+            cgst_amount = taxable_amount * GST_RATES["CGST"]
+            sgst_amount = taxable_amount * GST_RATES["SGST"]
             igst_amount = 0.0
         else:
             cgst_amount = 0.0
             sgst_amount = 0.0
-            igst_amount = taxable_amount * GST_RATE_IGST / 100
+            igst_amount = taxable_amount * GST_RATES["IGST"]
         
         total_gst = cgst_amount + sgst_amount + igst_amount
         grand_total = taxable_amount + total_gst

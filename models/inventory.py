@@ -12,7 +12,7 @@ class InventoryBatch(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
-    product = relationship("Product", back_populates="inventory_batches")
+    product = relationship("Product")
     
     # Finished variant (e.g., "Bright Lycra 26G", "Taiwan 24G CXC")
     # Can be "TBD" for batches in mill that haven't been finalized
@@ -37,7 +37,6 @@ class InventoryBatch(Base):
     mill_job_id = Column(Integer, ForeignKey("mill_jobs.id"), nullable=True)
     
     # Relations
-    product = relationship("Product")
     purchase = relationship("Purchase", back_populates="inventory_batches")
     mill_job = relationship("MillJob", back_populates="inventory_batches")
     
