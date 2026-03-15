@@ -1,41 +1,55 @@
 {% extends "base.html" %}
 
-{% block title %}Ledger{% endblock %}
+{% block title %}{{ party_type }} Ledger - {{ party_name }}{% endblock %}
 
 {% block content %}
-<h1>{{ party_type }} Ledger: {{ ledger.get(party_type.lower() + '_name') or ledger.get('vendor_name') or
-    ledger.get('mill_name') or ledger.get('customer_name') }}</h1>
+<div class="flex-between mb-2">
+    <h1>{{ party_type }} Ledger: {{ party_name }}</h1>
+    <a href="/payments" class="btn btn-secondary">← Back to Payments</a>
+</div>
 
 <div class="card">
-    <p><strong>Total:</strong> ₹{{ "%.2f"|format(ledger.get('total_payable') or ledger.get('total_receivable')) }}</p>
-    <p><strong>Paid/Received:</strong> ₹{{ "%.2f"|format(ledger.get('total_paid') or ledger.get('total_received')) }}
-    </p>
-    <p><strong>Balance:</strong> ₹{{ "%.2f"|format(ledger.balance) }}</p>
+    <div class="dashboard-grid">
+        <div class="stat-card">
+            <h3>{{ "Total Receivable" if party_type == "CUSTOMER" else "Total Payable" }}</h3>
+            <div class="value">₹{{ "%.2f"|format(ledger.get('total_payable') or ledger.get('total_receivable') or 0) }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>{{ "Total Received" if party_type == "CUSTOMER" else "Total Paid" }}</h3>
+            <div class="value">₹{{ "%.2f"|format(ledger.get('total_paid') or ledger.get('total_received') or 0) }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>Balance Due</h3>
+            <div class="value">₹{{ "%.2f"|format(ledger.balance) }}</div>
+        </div>
+    </div>
 
-    <h3>Transactions</h3>
+    <h3 style="margin: 1rem 0 0.5rem;">Transaction History</h3>
     <table>
         <thead>
             <tr>
                 <th>Date</th>
                 <th>Type</th>
                 <th>Description</th>
-                <th>Debit</th>
-                <th>Credit</th>
+                <th style="text-align:right">Debit (₹)</th>
+                <th style="text-align:right">Credit (₹)</th>
+                <th style="text-align:right">Balance (₹)</th>
             </tr>
         </thead>
         <tbody>
+            {% set running = namespace(balance=0) %}
             {% for entry in ledger.entries %}
+            {% set running.balance = running.balance + entry.debit - entry.credit %}
             <tr>
-                <td>{{ entry.transaction_date.strftime('%Y-%m-%d') }}</td>
+                <td>{{ entry.transaction_date.strftime('%d-%m-%Y') }}</td>
                 <td>{{ entry.transaction_type }}</td>
                 <td>{{ entry.description }}</td>
-                <td>₹{{ "%.2f"|format(entry.debit) }}</td>
-                <td>₹{{ "%.2f"|format(entry.credit) }}</td>
+                <td style="text-align:right">{{ "%.2f"|format(entry.debit) if entry.debit else "—" }}</td>
+                <td style="text-align:right">{{ "%.2f"|format(entry.credit) if entry.credit else "—" }}</td>
+                <td style="text-align:right;font-weight:bold">{{ "%.2f"|format(running.balance) }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
-
-<a href="/payments" class="btn btn-secondary">Back to Payments</a>
 {% endblock %}

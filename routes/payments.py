@@ -18,14 +18,21 @@ async def payment_dashboard(request: Request, db: Session = Depends(get_db)):
     balances = PaymentService.get_all_balances(db)
     return templates.TemplateResponse("payments/dashboard.html", {
         "request": request,
-        **balances
+        "balances": balances
     })
 
 @router.get("/record", response_class=HTMLResponse)
-async def record_payment_form(request: Request, db: Session = Depends(get_db)):
-    """Show payment recording form."""
+async def record_payment_form(
+    request: Request,
+    party_type: str = None,
+    party_name: str = None,
+    db: Session = Depends(get_db)
+):
+    """Show payment recording form, optionally pre-filled from query params."""
     return templates.TemplateResponse("payments/form.html", {
-        "request": request
+        "request": request,
+        "prefill_party_type": party_type or "",
+        "prefill_party_name": party_name or "",
     })
 
 @router.post("/record")
@@ -53,6 +60,26 @@ async def record_payment(
         invoice_allocations=invoice_allocations
     )
     return RedirectResponse(url="/payments", status_code=303)
+
+@router.get("/ledger/{party_type}/{party_name}", response_class=HTMLResponse)
+async def view_ledger(request: Request, party_type: str, party_name: str, db: Session = Depends(get_db)):
+    """View transaction ledger for a party."""
+    if party_type == "CUSTOMER":
+        ledger = PaymentService.get_customer_balance(db, party_name)
+    elif party_type == "VENDOR":
+        ledger = PaymentService.get_vendor_balance(db, party_name)
+    elif party_type == "MILL":
+        ledger = PaymentService.get_mill_balance(db, party_name)
+    else:
+        return RedirectResponse(url="/payments", status_code=303)
+
+    return templates.TemplateResponse("payments/ledger.html", {
+        "request": request,
+        "party_type": party_type,
+        "party_name": party_name,
+        "ledger": ledger
+    })
+
 
 @router.get("/customer/{customer_name}/invoices")
 async def get_customer_invoices(customer_name: str, db: Session = Depends(get_db)):

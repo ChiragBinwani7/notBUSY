@@ -12,22 +12,31 @@
     <table>
         <thead>
             <tr>
-                <th>ID</th>
+                <th>Invoice No.</th>
                 <th>Date</th>
                 <th>Customer</th>
                 <th>Grand Total</th>
+                <th>Status</th>
+                <th>Remaining Due</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             {% for invoice in invoices %}
             <tr>
-                <td>{{ invoice.id }}</td>
-                <td>{{ invoice.invoice_date.strftime('%Y-%m-%d') }}</td>
+                <td>{{ invoice.invoice_number }}</td>
+                <td>{{ invoice.invoice_date.strftime('%d-%m-%Y') }}</td>
                 <td>{{ invoice.customer_name }}</td>
                 <td>₹{{ "%.2f"|format(invoice.grand_total) }}</td>
                 <td>
-                    <a href="/invoices/{{ invoice.id }}/print" class="btn btn-secondary">Print</a>
+                    <span class="badge badge-{{ invoice.payment_status | lower }}">
+                        {{ invoice.payment_status }}
+                    </span>
+                </td>
+                <td>₹{{ "%.2f"|format(invoice.remaining_due) }}</td>
+                <td>
+                    <a href="/invoices/{{ invoice.id }}/print" class="btn btn-secondary">Invoice</a>
+                    <a href="/invoices/{{ invoice.id }}/challan" class="btn btn-secondary">Challan</a>
                 </td>
             </tr>
             {% endfor %}

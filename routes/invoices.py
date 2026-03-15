@@ -5,6 +5,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from core.database import get_db
+from core.config import FREIGHT_PER_PARCEL, GST_RATES
 from services.invoice_service import InvoiceService
 from services.inventory_service import InventoryService
 from models.product import Product
@@ -33,9 +34,15 @@ async def new_invoice_form(request: Request, db: Session = Depends(get_db)):
         variants = InventoryService.get_available_variants(db, product.id)
         product_variants[product.id] = variants
     
+    # Serialize products for JavaScript (only needed fields)
+    products_json = json.dumps([
+        {"id": p.id, "name": p.name} for p in products
+    ])
+    
     return templates.TemplateResponse("invoices/form.html", {
         "request": request,
         "products": products,
+        "products_json": products_json,
         "product_variants": json.dumps(product_variants)
     })
 
@@ -80,5 +87,11 @@ async def print_invoice(request: Request, invoice_id: int, db: Session = Depends
     
     return templates.TemplateResponse("invoices/print.html", {
         "request": request,
-        **data
+        **data,
+        "freight_per_parcel": FREIGHT_PER_PARCEL,
+        "gst_rates": {
+            "cgst": GST_RATES["CGST"] * 100,
+            "sgst": GST_RATES["SGST"] * 100,
+            "igst": GST_RATES["IGST"] * 100,
+        }
     })

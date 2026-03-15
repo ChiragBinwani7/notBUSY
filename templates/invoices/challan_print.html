@@ -42,7 +42,9 @@
         </table>
 
         <p><strong>Total Raw Meters:</strong> {{ "%.2f"|format(item.raw_meters) }}</p>
-        <p><strong>Fold:</strong> {{ item.fold_percent }}% (shown for reference, NOT applied)</p>
+        {% if item.fold_percent > 0 %}
+        <p><em>Fold Deduction: {{ item.fold_percent }}% deducted from raw meters on invoice (invoice shows {{ "%.2f"|format(item.raw_meters * (1 - item.fold_percent / 100)) }} net meters).</em></p>
+        {% endif %}
     </div>
     {% endfor %}
 

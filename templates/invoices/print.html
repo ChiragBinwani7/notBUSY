@@ -51,21 +51,21 @@
                 <td>₹{{ "%.2f"|format(invoice.product_value) }}</td>
             </tr>
             <tr>
-                <td>Freight ({{ invoice.total_parcels }} parcels × ₹100):</td>
+                <td>Freight ({{ invoice.total_parcels }} parcels × ₹{{ freight_per_parcel }}):</td>
                 <td>₹{{ "%.2f"|format(invoice.freight_charges) }}</td>
             </tr>
             {% if invoice.cgst_amount > 0 %}
             <tr>
-                <td>CGST (2.5%):</td>
+                <td>CGST ({{ "%.1f"|format(gst_rates.cgst) }}%):</td>
                 <td>₹{{ "%.2f"|format(invoice.cgst_amount) }}</td>
             </tr>
             <tr>
-                <td>SGST (2.5%):</td>
+                <td>SGST ({{ "%.1f"|format(gst_rates.sgst) }}%):</td>
                 <td>₹{{ "%.2f"|format(invoice.sgst_amount) }}</td>
             </tr>
             {% else %}
             <tr>
-                <td>IGST (5%):</td>
+                <td>IGST ({{ "%.1f"|format(gst_rates.igst) }}%):</td>
                 <td>₹{{ "%.2f"|format(invoice.igst_amount) }}</td>
             </tr>
             {% endif %}

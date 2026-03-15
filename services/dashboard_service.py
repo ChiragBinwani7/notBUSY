@@ -42,7 +42,7 @@ class DashboardService:
                 "total_payable": balances["total_payable"]
             },
             "today": {
-                "bills": len(today_invoices),  # Phase 2: Bills/Invoices unified
+                "invoices": len(today_invoices),
                 "payments": len(today_payments),
                 "invoice_list": today_invoices,
                 "payment_list": today_payments

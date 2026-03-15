@@ -15,9 +15,9 @@
         <thead>
             <tr>
                 <th>Customer</th>
-                <th>Total Receivable</th>
+                <th>Total Billed</th>
                 <th>Received</th>
-                <th>Balance</th>
+                <th>Balance Due</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -27,10 +27,13 @@
                 <td>{{ customer.customer_name }}</td>
                 <td>₹{{ "%.2f"|format(customer.total_receivable) }}</td>
                 <td>₹{{ "%.2f"|format(customer.total_received) }}</td>
-                <td>₹{{ "%.2f"|format(customer.balance) }}</td>
+                <td><strong>₹{{ "%.2f"|format(customer.balance) }}</strong></td>
                 <td>
-                    <a href="/payments/ledger/CUSTOMER/{{ customer.customer_name }}" class="btn btn-secondary">View
-                        Ledger</a>
+                    <a href="/payments/ledger/CUSTOMER/{{ customer.customer_name }}" class="btn btn-secondary">Ledger</a>
+                    {% if customer.balance > 0 %}
+                    <a href="/payments/record?party_type=CUSTOMER&party_name={{ customer.customer_name | urlencode }}"
+                        class="btn btn-success">Receive</a>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
@@ -47,7 +50,7 @@
                 <th>Vendor</th>
                 <th>Total Payable</th>
                 <th>Paid</th>
-                <th>Balance</th>
+                <th>Balance Due</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -57,9 +60,13 @@
                 <td>{{ vendor.vendor_name }}</td>
                 <td>₹{{ "%.2f"|format(vendor.total_payable) }}</td>
                 <td>₹{{ "%.2f"|format(vendor.total_paid) }}</td>
-                <td>₹{{ "%.2f"|format(vendor.balance) }}</td>
+                <td><strong>₹{{ "%.2f"|format(vendor.balance) }}</strong></td>
                 <td>
-                    <a href="/payments/ledger/VENDOR/{{ vendor.vendor_name }}" class="btn btn-secondary">View Ledger</a>
+                    <a href="/payments/ledger/VENDOR/{{ vendor.vendor_name }}" class="btn btn-secondary">Ledger</a>
+                    {% if vendor.balance > 0 %}
+                    <a href="/payments/record?party_type=VENDOR&party_name={{ vendor.vendor_name | urlencode }}"
+                        class="btn">Pay</a>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
@@ -76,7 +83,7 @@
                 <th>Mill</th>
                 <th>Total Payable</th>
                 <th>Paid</th>
-                <th>Balance</th>
+                <th>Balance Due</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -86,9 +93,13 @@
                 <td>{{ mill.mill_name }}</td>
                 <td>₹{{ "%.2f"|format(mill.total_payable) }}</td>
                 <td>₹{{ "%.2f"|format(mill.total_paid) }}</td>
-                <td>₹{{ "%.2f"|format(mill.balance) }}</td>
+                <td><strong>₹{{ "%.2f"|format(mill.balance) }}</strong></td>
                 <td>
-                    <a href="/payments/ledger/MILL/{{ mill.mill_name }}" class="btn btn-secondary">View Ledger</a>
+                    <a href="/payments/ledger/MILL/{{ mill.mill_name }}" class="btn btn-secondary">Ledger</a>
+                    {% if mill.balance > 0 %}
+                    <a href="/payments/record?party_type=MILL&party_name={{ mill.mill_name | urlencode }}"
+                        class="btn">Pay</a>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}

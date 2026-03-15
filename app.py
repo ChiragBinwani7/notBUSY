@@ -34,6 +34,70 @@ async def startup_event():
     """Initialize database and seed products on startup."""
     # Create all tables
     Base.metadata.create_all(bind=engine)
+
+    # Run schema migrations for columns added after initial creation
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        # ---------- inventory_batches ----------
+        result = conn.execute(text("PRAGMA table_info(inventory_batches)"))
+        existing_cols = {row[1] for row in result.fetchall()}
+        if "finished_variant" not in existing_cols:
+            conn.execute(text("ALTER TABLE inventory_batches ADD COLUMN finished_variant VARCHAR"))
+            conn.commit()
+
+        # ---------- mill_jobs ----------
+        result = conn.execute(text("PRAGMA table_info(mill_jobs)"))
+        existing_cols = {row[1] for row in result.fetchall()}
+        if "raw_category" not in existing_cols:
+            conn.execute(text("ALTER TABLE mill_jobs ADD COLUMN raw_category VARCHAR"))
+            conn.commit()
+        if "finished_variant" not in existing_cols:
+            conn.execute(text("ALTER TABLE mill_jobs ADD COLUMN finished_variant VARCHAR NOT NULL DEFAULT 'TBD'"))
+            conn.commit()
+        if "variant_finalized" not in existing_cols:
+            conn.execute(text("ALTER TABLE mill_jobs ADD COLUMN variant_finalized BOOLEAN NOT NULL DEFAULT 0"))
+            conn.commit()
+
+        # ---------- invoices ----------
+        result = conn.execute(text("PRAGMA table_info(invoices)"))
+        existing_cols = {row[1] for row in result.fetchall()}
+        if "transport_name" not in existing_cols:
+            conn.execute(text("ALTER TABLE invoices ADD COLUMN transport_name VARCHAR NOT NULL DEFAULT ''"))
+            conn.commit()
+        if "invoice_number" not in existing_cols:
+            conn.execute(text("ALTER TABLE invoices ADD COLUMN invoice_number VARCHAR"))
+            conn.commit()
+            # Back-fill invoice numbers for existing rows
+            conn.execute(text(
+                "UPDATE invoices SET invoice_number = 'INV-' || strftime('%Y%m%d', invoice_date) || '-' || printf('%03d', id) "
+                "WHERE invoice_number IS NULL"
+            ))
+            conn.commit()
+        if "total_parcels" not in existing_cols:
+            conn.execute(text("ALTER TABLE invoices ADD COLUMN total_parcels INTEGER NOT NULL DEFAULT 0"))
+            conn.commit()
+        if "remaining_due" not in existing_cols:
+            conn.execute(text("ALTER TABLE invoices ADD COLUMN remaining_due FLOAT NOT NULL DEFAULT 0"))
+            conn.commit()
+            # Back-fill remaining_due = grand_total for existing rows
+            conn.execute(text("UPDATE invoices SET remaining_due = grand_total WHERE remaining_due = 0"))
+            conn.commit()
+        if "payment_status" not in existing_cols:
+            conn.execute(text("ALTER TABLE invoices ADD COLUMN payment_status VARCHAR NOT NULL DEFAULT 'UNPAID'"))
+            conn.commit()
+
+        # ---------- purchases ----------
+        result = conn.execute(text("PRAGMA table_info(purchases)"))
+        existing_cols = {row[1] for row in result.fetchall()}
+        if "send_to_mill" not in existing_cols:
+            conn.execute(text("ALTER TABLE purchases ADD COLUMN send_to_mill BOOLEAN NOT NULL DEFAULT 0"))
+            conn.commit()
+        if "mill_name" not in existing_cols:
+            conn.execute(text("ALTER TABLE purchases ADD COLUMN mill_name VARCHAR"))
+            conn.commit()
+        if "expected_finished_variant" not in existing_cols:
+            conn.execute(text("ALTER TABLE purchases ADD COLUMN expected_finished_variant VARCHAR"))
+            conn.commit()
     
     # Seed products if not already present
     db = SessionLocal()

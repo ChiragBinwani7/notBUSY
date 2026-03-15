@@ -10,15 +10,16 @@
             <label>Party Type:</label>
             <select name="party_type" id="partyType" required onchange="handlePartyTypeChange()">
                 <option value="">Select Type</option>
-                <option value="VENDOR">Vendor</option>
-                <option value="MILL">Mill</option>
-                <option value="CUSTOMER">Customer</option>
+                <option value="VENDOR" {% if prefill_party_type == 'VENDOR' %}selected{% endif %}>Vendor</option>
+                <option value="MILL" {% if prefill_party_type == 'MILL' %}selected{% endif %}>Mill</option>
+                <option value="CUSTOMER" {% if prefill_party_type == 'CUSTOMER' %}selected{% endif %}>Customer</option>
             </select>
         </div>
 
         <div class="form-group">
             <label>Party Name:</label>
-            <input type="text" name="party_name" id="partyName" required onblur="loadCustomerInvoices()">
+            <input type="text" name="party_name" id="partyName" required
+                value="{{ prefill_party_name }}" onblur="loadCustomerInvoices()">
         </div>
 
         <div id="invoiceSection" style="display: none;">
@@ -50,7 +51,7 @@
 
         <div class="form-actions">
             <button type="submit">Record Payment</button>
-            <a href="/payments" class="btn-secondary">Cancel</a>
+            <a href="/payments" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
 </div>
@@ -139,6 +140,13 @@
             if (allocations.length > 0) {
                 document.getElementById('invoiceAllocationsJson').value = JSON.stringify(allocations);
             }
+        }
+    });
+    // Auto-trigger when form is pre-filled via query params
+    document.addEventListener('DOMContentLoaded', function () {
+        handlePartyTypeChange();
+        if (document.getElementById('partyName').value) {
+            loadCustomerInvoices();
         }
     });
 </script>

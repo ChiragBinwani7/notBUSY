@@ -49,7 +49,7 @@
 
 <script>
     const productVariants = {{ product_variants | safe }};
-    const products = {{ products | tojson | safe }};
+    const products = {{ products_json | safe }};
 
     let lineCounter = 0;
 

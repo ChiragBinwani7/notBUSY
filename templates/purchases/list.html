@@ -12,23 +12,35 @@
     <table>
         <thead>
             <tr>
-                <th>ID</th>
                 <th>Date</th>
                 <th>Vendor</th>
+                <th>State</th>
                 <th>Product</th>
                 <th>Quantity</th>
-                <th>Total Amount</th>
+                <th>Purchase Value</th>
+                <th>GST</th>
+                <th>Total</th>
+                <th>Mill</th>
             </tr>
         </thead>
         <tbody>
             {% for purchase in purchases %}
             <tr>
-                <td>{{ purchase.id }}</td>
-                <td>{{ purchase.purchase_date.strftime('%Y-%m-%d') }}</td>
+                <td>{{ purchase.purchase_date.strftime('%d-%m-%Y') }}</td>
                 <td>{{ purchase.vendor_name }}</td>
+                <td>{{ purchase.vendor_state }}</td>
                 <td>{{ purchase.product.name }}</td>
                 <td>{{ purchase.quantity }} {{ purchase.quantity_unit }}</td>
+                <td>₹{{ "%.2f"|format(purchase.purchase_value) }}</td>
+                <td>₹{{ "%.2f"|format(purchase.gst_amount) }}</td>
                 <td>₹{{ "%.2f"|format(purchase.total_amount) }}</td>
+                <td>
+                    {% if purchase.send_to_mill %}
+                    <span class="badge badge-partial">→ {{ purchase.mill_name }}</span>
+                    {% else %}
+                    <span style="color:#aaa">—</span>
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>

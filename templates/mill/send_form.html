@@ -14,11 +14,20 @@
 
         <div class="form-group">
             <label>Product</label>
-            <select name="product_id" required>
+            <select name="product_id" id="productSelect" onchange="updateRawCategory()" required>
                 {% for product in products %}
-                <option value="{{ product.id }}">{{ product.name }}</option>
+                <option value="{{ product.id }}" data-name="{{ product.name }}">{{ product.name }}</option>
                 {% endfor %}
             </select>
+        </div>
+
+        <!-- Auto-populated from selected product -->
+        <input type="hidden" name="raw_category" id="rawCategory">
+
+        <div class="form-group">
+            <label>Expected Finished Variant</label>
+            <input type="text" name="finished_variant" placeholder="e.g., Bright Lycra 26G or TBD" required>
+            <small>Enter specific variant name or <strong>TBD</strong> to finalize later when receiving from mill.</small>
         </div>
 
         <div class="form-group">
@@ -30,4 +39,14 @@
         <a href="/mill" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
+
+<script>
+    function updateRawCategory() {
+        const select = document.getElementById('productSelect');
+        const option = select.options[select.selectedIndex];
+        document.getElementById('rawCategory').value = option.getAttribute('data-name') || '';
+    }
+    // Set initial value on page load
+    updateRawCategory();
+</script>
 {% endblock %}
