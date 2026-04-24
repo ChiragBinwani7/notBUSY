@@ -5,6 +5,49 @@
 {% block content %}
 <h1>Dashboard</h1>
 
+<!-- KPI Cards -->
+<div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+    <div class="stat-card" style="background: linear-gradient(135deg, #4776e6, #8e54e9);">
+        <h3>Total Receivable</h3>
+        <div class="value">₹{{ "%.2f"|format(data.money.total_receivable) }}</div>
+        <div style="font-size:.85rem;opacity:.85;margin-top:.25rem">From customers (ledger)</div>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #f97316, #ef4444);">
+        <h3>Pending Receivable</h3>
+        <div class="value">₹{{ "%.2f"|format(data.money.pending_receivable) }}</div>
+        <div style="font-size:.85rem;opacity:.85;margin-top:.25rem">Unpaid / Partial invoices</div>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #dc2626, #7f1d1d);">
+        <h3>Total Payable</h3>
+        <div class="value">₹{{ "%.2f"|format(data.money.total_payable) }}</div>
+        <div style="font-size:.85rem;opacity:.85;margin-top:.25rem">To vendors &amp; mills</div>
+    </div>
+    <div class="stat-card" style="background: linear-gradient(135deg, #43b89c, #0f9b58);">
+        <h3>Today's Invoices</h3>
+        <div class="value">{{ data.today.invoices }}</div>
+        <div style="font-size:.85rem;opacity:.85;margin-top:.25rem">Payments today: {{ data.today.payments }}</div>
+    </div>
+</div>
+
+<!-- Overdue Alert -->
+{% if data.overdue.total_count > 0 %}
+<div class="card" style="border-left:4px solid #dc2626; background:#fff5f5; margin-bottom:1.5rem;">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.5rem;">
+        <div>
+            <strong style="color:#dc2626">⚠ {{ data.overdue.total_count }} Overdue Invoice{{ 's' if data.overdue.total_count > 1 }}</strong>
+            &nbsp;— Total: <strong>₹{{ "%.2f"|format(data.overdue.total_amount) }}</strong>
+        </div>
+        <a href="/reports/outstanding" class="btn" style="background:#dc2626;">View Outstanding</a>
+    </div>
+    <div style="display:flex; gap:1.5rem; margin-top:.75rem; font-size:.9rem; flex-wrap:wrap;">
+        <span>🟡 1–30 days: <strong>{{ data.overdue.buckets['0_30'].count }}</strong> (₹{{ "%.0f"|format(data.overdue.buckets['0_30'].amount) }})</span>
+        <span>🟠 31–60 days: <strong>{{ data.overdue.buckets['31_60'].count }}</strong> (₹{{ "%.0f"|format(data.overdue.buckets['31_60'].amount) }})</span>
+        <span>🔴 61–90 days: <strong>{{ data.overdue.buckets['61_90'].count }}</strong> (₹{{ "%.0f"|format(data.overdue.buckets['61_90'].amount) }})</span>
+        <span>⛔ 90+ days: <strong>{{ data.overdue.buckets['90_plus'].count }}</strong> (₹{{ "%.0f"|format(data.overdue.buckets['90_plus'].amount) }})</span>
+    </div>
+</div>
+{% endif %}
+
 <!-- Stock Summary -->
 <div class="card">
     <h2>Stock Summary</h2>
@@ -28,34 +71,6 @@
         </div>
     </div>
     {% endfor %}
-</div>
-
-<!-- Money Summary -->
-<div class="dashboard-grid">
-    <div class="stat-card">
-        <h3>Total Receivable</h3>
-        <div class="value">₹{{ "%.2f"|format(data.money.total_receivable) }}</div>
-    </div>
-    <div class="stat-card">
-        <h3>Total Payable</h3>
-        <div class="value">₹{{ "%.2f"|format(data.money.total_payable) }}</div>
-    </div>
-</div>
-
-<!-- Today's Activity -->
-<div class="card">
-    <h2>Today's Activity</h2>
-    <div class="dashboard-grid">
-        <div>
-            <h3>Invoices: {{ data.today.invoices }}</h3>
-        </div>
-        <div>
-            <h3>Challans: {{ data.today.challans }}</h3>
-        </div>
-        <div>
-            <h3>Payments: {{ data.today.payments }}</h3>
-        </div>
-    </div>
 </div>
 
 <!-- GST Summary -->
@@ -89,5 +104,18 @@
             <td>₹{{ "%.2f"|format(data.gst_current_month.net_gst_payable) }}</td>
         </tr>
     </table>
+</div>
+
+<!-- Quick Links -->
+<div class="card">
+    <h2>Quick Actions</h2>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;padding:.5rem 0;">
+        <a href="/invoices/new" class="btn">🧾 New Invoice</a>
+        <a href="/purchases/new" class="btn btn-secondary">🛒 New Purchase</a>
+        <a href="/mill/send" class="btn btn-secondary">🏭 Send to Mill</a>
+        <a href="/payments/record" class="btn btn-secondary">💰 Record Payment</a>
+        <a href="/reports/daybook" class="btn btn-secondary">📒 Day Book</a>
+        <a href="/reports/outstanding" class="btn btn-secondary">📊 Outstanding</a>
+    </div>
 </div>
 {% endblock %}

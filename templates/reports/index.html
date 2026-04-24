@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<h1>Reports</h1>
+<div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+
+    <a href="/reports/daybook?from_date={{ month_start }}&to_date={{ today }}" class="report-card">
+        <div class="report-icon">📒</div>
+        <h3>Day Book</h3>
+        <p>Chronological journal of all transactions — invoices, purchases, receipts, payments.</p>
+    </a>
+
+    <a href="/reports/outstanding" class="report-card">
+        <div class="report-icon">📊</div>
+        <h3>Outstanding Receivables</h3>
+        <p>Customer-wise balance due with aging analysis (0–30, 31–60, 61–90, 90+ days).</p>
+    </a>
+
+    <a href="/reports/pnl?from_date={{ current_year }}-01-01&to_date={{ today }}" class="report-card">
+        <div class="report-icon">💹</div>
+        <h3>Profit &amp; Loss</h3>
+        <p>Sales vs. purchase cost vs. mill charges — gross profit summary for any period.</p>
+    </a>
+
+    <a href="/gst/gstr1/{{ current_year }}/{{ current_month }}" class="report-card">
+        <div class="report-icon">🧾</div>
+        <h3>GSTR-1 (Sales)</h3>
+        <p>Monthly outward sales GST detail for return filing.</p>
+    </a>
+
+    <a href="/gst/gstr3b/{{ current_year }}/{{ current_month }}" class="report-card">
+        <div class="report-icon">📋</div>
+        <h3>GSTR-3B Summary</h3>
+        <p>Monthly net GST payable summary — output minus input credit.</p>
+    </a>
+
+</div>
+
+<style>
+.report-card {
+    display: block;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-decoration: none;
+    color: #333;
+    transition: box-shadow .15s, transform .15s;
+}
+.report-card:hover {
+    box-shadow: 0 4px 18px rgba(0,0,0,.10);
+    transform: translateY(-2px);
+    text-decoration: none;
+    color: #1a1a2e;
+}
+.report-icon { font-size: 2rem; margin-bottom: .5rem; }
+.report-card h3 { margin: 0 0 .4rem; font-size: 1.1rem; }
+.report-card p  { margin: 0; font-size: .88rem; color: #666; }
+</style>
+{% endblock %}

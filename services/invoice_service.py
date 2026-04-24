@@ -6,8 +6,8 @@ from models.product import Product
 from models.payment import CustomerLedger
 from models.gst import GSTTransaction
 from services.inventory_service import InventoryService
-from core.config import GSTTransactionType, GUJARAT_STATE, GST_RATE_CGST, GST_RATE_SGST, GST_RATE_IGST, FREIGHT_PER_PARCEL
-from datetime import datetime
+from core.config import GSTTransactionType, GUJARAT_STATE, GST_RATES, FREIGHT_PER_PARCEL
+from datetime import datetime, timedelta
 import json
 
 class InvoiceService:
@@ -38,7 +38,8 @@ class InvoiceService:
         customer_name: str,
         customer_state: str,
         transport_name: str,
-        line_items: list
+        line_items: list,
+        payment_terms_days: int = 30
     ) -> Invoice:
         """
         Create invoice with unified bill/challan data.
@@ -118,19 +119,21 @@ class InvoiceService:
         taxable_amount = product_value + freight_charges
         
         if customer_state == GUJARAT_STATE:
-            cgst_amount = taxable_amount * GST_RATE_CGST / 100
-            sgst_amount = taxable_amount * GST_RATE_SGST / 100
+            cgst_amount = taxable_amount * GST_RATES["CGST"]
+            sgst_amount = taxable_amount * GST_RATES["SGST"]
             igst_amount = 0.0
         else:
             cgst_amount = 0.0
             sgst_amount = 0.0
-            igst_amount = taxable_amount * GST_RATE_IGST / 100
+            igst_amount = taxable_amount * GST_RATES["IGST"]
         
         total_gst = cgst_amount + sgst_amount + igst_amount
         grand_total = taxable_amount + total_gst
         
         # Generate invoice number
         invoice_number = InvoiceService.generate_invoice_number(db)
+        now = datetime.utcnow()
+        due = now + timedelta(days=payment_terms_days)
         
         # Create invoice
         invoice = Invoice(
@@ -138,7 +141,7 @@ class InvoiceService:
             customer_state=customer_state,
             transport_name=transport_name,
             invoice_number=invoice_number,
-            invoice_date=datetime.utcnow(),
+            invoice_date=now,
             line_items_json=json.dumps(processed_items),
             total_parcels=total_parcels,
             product_value=round(product_value, 2),
@@ -149,7 +152,9 @@ class InvoiceService:
             total_gst=round(total_gst, 2),
             grand_total=round(grand_total, 2),
             remaining_due=round(grand_total, 2),
-            payment_status="UNPAID"
+            payment_status="UNPAID",
+            payment_terms_days=payment_terms_days,
+            due_date=due
         )
         db.add(invoice)
         db.flush()

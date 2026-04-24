@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Day Book{% endblock %}
+{% block content %}
+<div class="flex-between mb-2">
+    <h1>📒 Day Book</h1>
+    <a href="/reports" class="btn btn-secondary">← Reports</a>
+</div>
+
+<!-- Date range filter -->
+<div class="card" style="padding:.8rem 1rem">
+    <form method="get" action="/reports/daybook" style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;">
+        <div class="form-group" style="margin:0">
+            <label>From Date</label>
+            <input type="date" name="from_date" value="{{ from_date }}" required>
+        </div>
+        <div class="form-group" style="margin:0">
+            <label>To Date</label>
+            <input type="date" name="to_date" value="{{ to_date }}" required>
+        </div>
+        <button type="submit" class="btn">Apply</button>
+    </form>
+</div>
+
+<!-- Summary -->
+<div class="dashboard-grid" style="grid-template-columns: repeat(3, 1fr); gap:1rem; margin-bottom:1rem;">
+    <div class="stat-card">
+        <h3>Total Transactions</h3>
+        <div class="value">{{ data.entries | length }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Total Debit</h3>
+        <div class="value">₹{{ "%.2f"|format(data.total_debit) }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Total Credit</h3>
+        <div class="value">₹{{ "%.2f"|format(data.total_credit) }}</div>
+    </div>
+</div>
+
+<div class="card">
+    {% if data.entries %}
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Party</th>
+                <th>Description</th>
+                <th style="text-align:right">Debit (₹)</th>
+                <th style="text-align:right">Credit (₹)</th>
+                <th>Ref</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set prev_date = namespace(value=None) %}
+            {% for e in data.entries %}
+            {% set cur_date = e.date.strftime('%d-%m-%Y') %}
+            {% if cur_date != prev_date.value %}
+            <tr style="background:#f0f4ff;">
+                <td colspan="7" style="font-weight:600;font-size:.85rem;color:#555;padding:4px 8px;">
+                    📅 {{ cur_date }}
+                </td>
+            </tr>
+            {% set prev_date.value = cur_date %}
+            {% endif %}
+            <tr>
+                <td>{{ e.date.strftime('%H:%M') }}</td>
+                <td>
+                    <span class="badge
+                        {% if e.type == 'Sales Invoice' %}badge-paid
+                        {% elif e.type == 'Receipt' %}badge-paid
+                        {% elif e.type == 'Purchase' %}badge-unpaid
+                        {% else %}badge-partial{% endif %}">
+                        {{ e.type }}
+                    </span>
+                </td>
+                <td>{{ e.party }}</td>
+                <td style="font-size:.9rem">{{ e.description }}</td>
+                <td style="text-align:right">
+                    {% if e.debit > 0 %}₹{{ "%.2f"|format(e.debit) }}{% else %}—{% endif %}
+                </td>
+                <td style="text-align:right">
+                    {% if e.credit > 0 %}₹{{ "%.2f"|format(e.credit) }}{% else %}—{% endif %}
+                </td>
+                <td style="font-size:.85rem">
+                    {% if e.url %}
+                    <a href="{{ e.url }}">{{ e.ref }}</a>
+                    {% else %}
+                    {{ e.ref }}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr style="font-weight:bold;background:#f5f5f5;">
+                <td colspan="4">TOTAL</td>
+                <td style="text-align:right">₹{{ "%.2f"|format(data.total_debit) }}</td>
+                <td style="text-align:right">₹{{ "%.2f"|format(data.total_credit) }}</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+    {% else %}
+    <p style="color:#888;text-align:center;padding:2rem;">No transactions found for the selected period.</p>
+    {% endif %}
+</div>
+{% endblock %}

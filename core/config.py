@@ -50,3 +50,13 @@ GUJARAT_STATE = "Gujarat"
 
 # Freight charges
 FREIGHT_PER_PARCEL = 100  # ₹100 per parcel
+
+# Company information (displayed on invoice print)
+COMPANY_NAME = "Your Company Name"
+COMPANY_TYPE = "Textile Merchant & Fabric Dealer"
+COMPANY_ADDRESS = "Surat, Gujarat — 395001"
+COMPANY_GSTIN = "24XXXXX0000X1ZX"
+COMPANY_PHONE = "+91-XXXXX-XXXXX"
+COMPANY_BANK_NAME = "__________________"
+COMPANY_BANK_ACCOUNT = "__________________"
+COMPANY_BANK_IFSC = "__________________"

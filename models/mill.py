@@ -1,6 +1,6 @@
 """Mill job work models."""
 
-from sqlalchemy import Column, Integer, Float, String, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, Float, String, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from core.database import Base
@@ -46,7 +46,6 @@ class MillJob(Base):
     status = Column(String, default="SENT", nullable=False)  # SENT, RECEIVED
     
     # Relations
-    product = relationship("Product")
     inventory_batches = relationship("InventoryBatch", back_populates="mill_job")
     
     def __repr__(self):

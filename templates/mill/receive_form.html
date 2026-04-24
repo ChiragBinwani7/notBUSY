@@ -6,11 +6,23 @@
 <h1>Receive from Mill</h1>
 
 <div class="card">
-    <h3>Mill Job #{{ mill_job.id }} - {{ mill_job.mill_name }}</h3>
+    <h3>Mill Job #{{ mill_job.id }} — {{ mill_job.mill_name }}</h3>
     <p>Product: {{ mill_job.product.name }}</p>
     <p>Grey Sent: {{ mill_job.grey_quantity }} {{ mill_job.grey_quantity_unit }}</p>
+    <p>Sent On: {{ mill_job.sent_date.strftime('%d-%m-%Y') }}</p>
+    {% if mill_job.finished_variant != 'TBD' %}
+    <p>Expected Variant: <strong>{{ mill_job.finished_variant }}</strong></p>
+    {% endif %}
 
     <form method="POST" action="/mill/receive/{{ mill_job.id }}">
+        {% if mill_job.finished_variant == 'TBD' %}
+        <div class="form-group">
+            <label>Finished Variant <span style="color:red">*</span></label>
+            <input type="text" name="finished_variant" placeholder="e.g., Bright Lycra 26G" required>
+            <small>This job was sent with variant TBD. Please specify the final variant now.</small>
+        </div>
+        {% endif %}
+
         <div class="form-group">
             <label>Processed Takas</label>
             <input type="number" name="processed_takas" required>
@@ -36,7 +48,7 @@
             <input type="number" step="0.01" name="gst_amount" required>
         </div>
 
-        <button type="submit" class="btn">Receive from Mill</button>
+        <button type="submit" class="btn btn-success">Receive from Mill</button>
         <a href="/mill" class="btn btn-secondary">Cancel</a>
     </form>
 </div>

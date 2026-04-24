@@ -35,6 +35,18 @@ nav h1 {
     font-size: 1.5rem;
 }
 
+.nav-brand {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: white;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+}
+
+.nav-brand:hover {
+    color: #3498db;
+}
+
 nav ul {
     list-style: none;
     display: flex;
@@ -49,6 +61,12 @@ nav a {
 
 nav a:hover {
     color: #3498db;
+}
+
+nav a.active {
+    color: #3498db;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 2px;
 }
 
 /* Cards */
@@ -233,4 +251,61 @@ input:focus, select:focus, textarea:focus {
     font-size: 1.5rem;
     font-weight: bold;
     color: #3498db;
+}
+
+/* Payment Status Badges */
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.badge-paid {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.badge-unpaid {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.badge-partial {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+/* Forms - button consistency */
+.form-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+/* Print styles */
+@media print {
+    nav, .print-actions, .btn {
+        display: none !important;
+    }
+
+    body {
+        background: white;
+    }
+
+    .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+
+    table th {
+        background-color: #f5f5f5 !important;
+        color: #333 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
 }

@@ -11,14 +11,15 @@
 <body>
     <nav>
         <div class="container">
-            <h1>Textile Accounting</h1>
+            <a href="/" class="nav-brand">📦 Textile Accounting</a>
             <ul>
-                <li><a href="/">Dashboard</a></li>
-                <li><a href="/purchases">Purchases</a></li>
-                <li><a href="/mill">Mill Jobs</a></li>
-                <li><a href="/invoices">Invoices</a></li>
-                <li><a href="/payments">Payments</a></li>
-                <li><a href="/gst">GST Reports</a></li>
+                <li><a href="/" {% if request.url.path == "/" %}class="active"{% endif %}>Dashboard</a></li>
+                <li><a href="/purchases" {% if request.url.path.startswith("/purchases") %}class="active"{% endif %}>Purchases</a></li>
+                <li><a href="/mill" {% if request.url.path.startswith("/mill") %}class="active"{% endif %}>Mill Jobs</a></li>
+                <li><a href="/invoices" {% if request.url.path.startswith("/invoices") %}class="active"{% endif %}>Invoices</a></li>
+                <li><a href="/payments" {% if request.url.path.startswith("/payments") %}class="active"{% endif %}>Payments</a></li>
+                <li><a href="/gst" {% if request.url.path.startswith("/gst") %}class="active"{% endif %}>GST</a></li>
+                <li><a href="/reports" {% if request.url.path.startswith("/reports") %}class="active"{% endif %}>Reports</a></li>
             </ul>
         </div>
     </nav>
